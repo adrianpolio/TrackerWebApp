@@ -1,0 +1,83 @@
+.home-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	grid-template-rows: 1.2fr 1fr;
+	grid-template-areas:
+		"tracking tracking"
+		"shipper user";
+
+	gap: 2rem;
+	height: calc(100vh - 80px);
+	padding: 2rem;
+}
+
+.tracking {
+	grid-area: tracking;
+}
+
+.shipper {
+	grid-area: shipper;
+}
+
+.user {
+	grid-area: user;
+}
+
+// --
+
+.card {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+
+	border-radius: 20px;
+	color: white;
+	background: #1e1e1e;
+
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+	transform: translateY(-6px);
+	box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+}
+
+.tracking {
+	background: linear-gradient(135deg, #0984e3, #74b9ff);
+}
+
+.shipper {
+	background: #2d3436;
+}
+
+.user {
+	background: #3d3d3d;
+}
+
+.card h2 {
+	margin-bottom: 1rem;
+	letter-spacing: 3px;
+}
+
+.card button {
+	padding: 0.8rem 2rem;
+	font-size: 1rem;
+	font-weight: bold;
+	border: none;
+	border-radius: 10px;
+	cursor: pointer;
+}
+
+// --
+
+@media (max-width: 768px) {
+	.home-grid {
+		grid-template-columns: 1fr;
+		grid-template-areas:
+			"tracking"
+			"shipper"
+			"user";
+	}
+}
