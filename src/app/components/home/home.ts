@@ -14,4 +14,14 @@ export class Home {
 	goTo(route: string) {
 		this.router.navigate([route]);
 	}
+
+  goToTracking(code: string) {
+    if (!code.trim()) {
+      return;
+    }
+    this.router.navigate(['/tracking'], {
+      queryParams: { code }
+    });
+  }
+  
 }
