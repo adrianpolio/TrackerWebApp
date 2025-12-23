@@ -1,0 +1,91 @@
+<div class="login-container">
+  <div class="login-card">
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+      <h2 class="form-title">Acceso al Sistema</h2>
+      <p class="form-subtitle">Ingresa tus credenciales para continuar</p>
+
+      <div *ngIf="errorMessage" class="alert alert-danger alert-custom">
+        <i class="fas fa-exclamation-circle"></i>
+        {{ errorMessage }}
+      </div>
+
+      <div class="form-group-custom">
+        <label class="form-label">
+          <i class="fas fa-envelope icon-left"></i>
+          Correo Electrónico
+        </label>
+        <input 
+          formControlName="email" 
+          type="email" 
+          class="form-control-custom" 
+          placeholder="usuario@empresa.com"
+          [class.is-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+        />
+        <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" class="invalid-feedback-custom">
+          <i class="fas fa-exclamation-triangle"></i>
+          Ingresa un correo electrónico válido
+        </div>
+      </div>
+
+      <div class="form-group-custom">
+        <label class="form-label">
+          <i class="fas fa-lock icon-left"></i>
+          Contraseña
+        </label>
+        <div class="password-input-container">
+          <input 
+            formControlName="password" 
+            [type]="showPassword ? 'text' : 'password'" 
+            class="form-control-custom" 
+            placeholder="••••••••"
+            [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+          />
+          <button 
+            type="button" 
+            class="password-toggle"
+            (click)="togglePasswordVisibility()"
+          >
+            <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+          </button>
+        </div>
+        <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" class="invalid-feedback-custom">
+          <i class="fas fa-exclamation-triangle"></i>
+          La contraseña es requerida
+        </div>
+      </div>
+
+      <div class="remember-forgot">
+        <label class="checkbox-container">
+          <input type="checkbox" formControlName="rememberMe">
+          <span class="checkmark"></span>
+          Recordar sesión
+        </label>
+        <a href="#" class="forgot-password">¿Olvidaste tu contraseña?</a>
+      </div>
+
+      <button 
+        type="submit" 
+        class="btn-login" 
+        [disabled]="loginForm.invalid || isLoading"
+        [class.loading]="isLoading"
+      >
+        <span *ngIf="!isLoading">
+          <i class="fas fa-sign-in-alt"></i>
+          Iniciar Sesión
+        </span>
+        <span *ngIf="isLoading" class="loading-spinner">
+          <i class="fas fa-spinner fa-spin"></i>
+          Verificando...
+        </span>
+      </button>
+
+      <div class="additional-info">
+        <p>¿Nuevo en el sistema? <a routerLink="/register" class="register-link">Solicita acceso</a></p>
+      </div>
+    </form>
+
+    <div class="login-footer">
+      <p>© 2025 TrackerLog - Sistema de Gestión de Envíos</p>
+      <p class="version">v2.1.0</p>
+    </div>
+  </div>

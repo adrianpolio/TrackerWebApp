@@ -1,0 +1,237 @@
+$primary-blue: #2563eb;
+$primary-blue-light: #60a5fa;
+$primary-blue-dark: #1d4ed8;
+$gray-50: #f9fafb;
+$gray-100: #f3f4f6;
+$gray-200: #e5e7eb;
+$gray-400: #9ca3af;
+$gray-500: #6b7280;
+$gray-700: #374151;
+$gray-900: #111827;
+$error-red: #dc2626;
+$gray-600: #4b5563;
+
+.login-container {
+  display: flex;
+  min-height: 100vh;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, $gray-50 0%, #c3cfe2 100%);
+  font-family: 'Inter', sans-serif;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 480px;
+  background: white;
+  padding: 3rem;
+  border-radius: 1rem;
+  box-shadow: 0 20px 60px rgba(131, 106, 189, 0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+.login-form {
+  .form-title {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: $gray-900;
+  }
+
+  .form-subtitle {
+    text-align: center;
+    font-size: 0.875rem;
+    margin-bottom: 2rem;
+    color: $gray-500;
+  }
+}
+
+.alert-custom {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: $error-red;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: 0.875rem;
+}
+
+.form-group-custom {
+  margin-bottom: 1.5rem;
+
+  .form-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: $gray-700;
+
+    .icon-left {
+      font-size: 0.875rem;
+      color: $gray-500;
+    }
+  }
+}
+
+.form-control-custom {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 2px solid $gray-200;
+  border-radius: 0.5rem;
+  background: $gray-50;
+  font-size: 0.9375rem;
+  color: $gray-900;
+
+  &:focus {
+    outline: none;
+    border-color: $primary-blue;
+    background: white;
+  }
+
+  &.is-invalid {
+    border-color: $error-red;
+    background: #fef2f2;
+  }
+
+  &::placeholder {
+    color: $gray-400;
+  }
+}
+
+.password-input-container {
+  position: relative;
+
+  .password-toggle {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: $gray-500;
+  }
+}
+
+.invalid-feedback-custom {
+  color: $error-red;
+  font-size: 0.8125rem;
+  margin-top: 0.375rem;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.remember-forgot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: $gray-600;
+  position: relative;
+  padding-left: 1.75rem;
+
+  input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .checkmark {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 1.25rem;
+    width: 1.25rem;
+    background-color: $gray-100;
+    border: 2px solid $gray-400;
+    border-radius: 0.25rem;
+  }
+
+  input:checked ~ .checkmark {
+    background-color: $primary-blue;
+    border-color: $primary-blue;
+  }
+
+  .checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+  }
+
+  input:checked ~ .checkmark:after {
+    display: block;
+    left: 0.375rem;
+    top: 0.125rem;
+    width: 0.3125rem;
+    height: 0.625rem;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+}
+
+.forgot-password {
+  color: $primary-blue;
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.btn-login {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, $primary-blue, $primary-blue-light);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: $gray-400;
+  }
+}
+
+.loading-spinner i {
+  animation: spin 1s linear infinite;
+}
+
+.login-footer {
+  text-align: center;
+  color: $gray-400;
+  font-size: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
