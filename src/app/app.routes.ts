@@ -18,5 +18,4 @@ export const routes: Routes = [
     { path: 'shipments/detail/:id', component: ShipmentsDetail},
     { path: 'shipments/edit/:id', component: ShipmentsEdit},
     { path: 'track', component: TrackComponent }, 
-
 ];

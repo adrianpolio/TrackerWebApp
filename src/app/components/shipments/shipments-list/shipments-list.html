@@ -5,6 +5,10 @@
   </div>
 
   <div class="controls">
+    <button class="btn btn-secondary" routerLink="/">
+      <i class="fas fa-home"></i>
+      Inicio
+    </button>
     <button class="btn btn-primary" (click)="loadMyShipments()" [disabled]="loading">
       <i class="fas fa-sync-alt" [class.fa-spin]="loading"></i>
       Actualizar
@@ -75,9 +79,8 @@
                 <button class="btn btn-outline-info" [routerLink]="['/shipments/detail', shipment.shipmentId]">
                   <i class="fas fa-eye"></i> Ver
                 </button>
-                <button *ngIf="shipment.shipmentStatusDescription !== 'Entregado'" 
-                        class="btn btn-outline-danger"
-                        (click)="cancelShipment(shipment.shipmentId)">
+                <button *ngIf="shipment.shipmentStatusDescription !== 'Entregado'" class="btn btn-outline-danger"
+                  (click)="cancelShipment(shipment.shipmentId)">
                   <i class="fas fa-times"></i> Cancelar
                 </button>
               </div>
