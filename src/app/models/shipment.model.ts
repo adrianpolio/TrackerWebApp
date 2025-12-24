@@ -11,6 +11,8 @@ export interface Shipment {
   userName: string;
   customerId: number;
   userId: number;
+
+   shipmentStatusDescription: string; 
 }
 
 export interface CreateShipment {

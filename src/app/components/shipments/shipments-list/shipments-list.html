@@ -1,0 +1,101 @@
+<div class="my-shipments-container">
+  <div class="page-header">
+    <h1><i class="fas fa-shipping-fast"></i> Mis Envíos</h1>
+    <p class="subtitle">Aquí puedes ver todos los envíos que has creado</p>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-primary" (click)="loadMyShipments()" [disabled]="loading">
+      <i class="fas fa-sync-alt" [class.fa-spin]="loading"></i>
+      Actualizar
+    </button>
+    <a routerLink="/shipments/create" class="btn btn-success">
+      <i class="fas fa-plus"></i> Nuevo Envío
+    </a>
+  </div>
+
+  <div *ngIf="loading" class="alert alert-info">
+    <i class="fas fa-spinner fa-spin"></i> Cargando tus envíos...
+  </div>
+
+  <div *ngIf="error && !loading" class="alert alert-danger">
+    <i class="fas fa-exclamation-triangle"></i> {{ error }}
+    <button class="btn btn-sm btn-outline-danger ml-3" (click)="loadMyShipments()">Reintentar</button>
+  </div>
+
+  <div *ngIf="!loading && myShipments.length > 0">
+    <div class="shipments-stats">
+      <span class="stat-badge">
+        <i class="fas fa-box"></i> Total: {{ myShipments.length }}
+      </span>
+      <span *ngIf="countByStatus('Entregado') > 0" class="stat-badge">
+        <i class="fas fa-check-circle"></i> Entregados: {{ countByStatus('Entregado') }}
+      </span>
+      <span *ngIf="countByStatus('Habilitado') > 0" class="stat-badge">
+        <i class="fas fa-shipping-fast"></i> En tránsito: {{ countByStatus('Habilitado') }}
+      </span>
+    </div>
+
+    <div class="table-responsive mt-4">
+      <table class="table table-hover">
+        <thead class="thead-dark">
+          <tr>
+            <th>Tracking</th>
+            <th>Descripción</th>
+            <th>Destino</th>
+            <th>Estado</th>
+            <th>Fecha Envío</th>
+            <th>Fecha Entrega</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let shipment of myShipments">
+            <td>
+              <strong class="tracking-code">{{ shipment.trackingNumber }}</strong>
+            </td>
+            <td>{{ shipment.description }}</td>
+            <td>{{ shipment.destination }}</td>
+            <td>
+              <span class="badge" [ngClass]="getStatusClass(shipment.shipmentStatusDescription)">
+                {{ shipment.shipmentStatusDescription }}
+              </span>
+            </td>
+            <td>{{ formatDate(shipment.shippedAt) }}</td>
+            <td>
+              <span *ngIf="shipment.receivedAt; else notDelivered">
+                {{ formatDate(shipment.receivedAt) }}
+              </span>
+              <ng-template #notDelivered>
+                <span class="text-muted">-</span>
+              </ng-template>
+            </td>
+            <td>
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-info" [routerLink]="['/shipments', shipment.shipmentId]">
+                  <i class="fas fa-eye"></i> Ver
+                </button>
+                <button *ngIf="shipment.shipmentStatusDescription !== 'Entregado'" 
+                        class="btn btn-outline-danger"
+                        (click)="cancelShipment(shipment.shipmentId)">
+                  <i class="fas fa-times"></i> Cancelar
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div *ngIf="!loading && myShipments.length === 0 && !error" class="empty-state">
+    <div class="empty-state-icon">
+      <i class="fas fa-box-open"></i>
+    </div>
+    <h3>No tienes envíos registrados</h3>
+    <p class="text-muted">Comienza creando tu primer envío</p>
+    <a routerLink="/shipments/create" class="btn btn-lg btn-primary mt-3">
+      <i class="fas fa-plus"></i> Crear Primer Envío
+    </a>
+  </div>
+</div>

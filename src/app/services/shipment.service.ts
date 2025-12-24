@@ -1,6 +1,6 @@
 import { Injectable, inject } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
-import { Observable } from "rxjs";
+import { map, Observable } from "rxjs";
 import { environment } from "../../environments/environment";
 import { Shipment, CreateShipment, UpdateShipment, UpdateShipmentStatus } from "../models";
 
@@ -12,7 +12,16 @@ export class ShipmentService {
 	private apiUrl = `${environment.apiUrl}/Shipment`;
 
 	getAllShipments(): Observable<Shipment[]> {
-		return this.http.get<Shipment[]>(this.apiUrl);
+		return this.http.get<any[]>(this.apiUrl).pipe(
+			map(data => data.map(item => ({
+				...item,
+				// Mapear shipmentStatusDescription a shipmentStatus
+				shipmentStatus: item.shipmentStatusDescription,
+				// Si el modelo espera estos campos, pero el API no los envía
+				customerId: item.customerId || 0, // Valor por defecto
+				userId: item.userId || 0 // Valor por defecto
+			})))
+		);
 	}
 
 	getShipmentById(shipmentId: number): Observable<Shipment> {
