@@ -1,24 +1,213 @@
-<div class="home-grid">
-	<div class="card tracking">
-		<h2>TRACKING</h2>
-		<p>¿Ya tienes tu número de seguimiento?</p>
-		<p>Ingresa aquí para ver cómo va</p>
+<div class="home-container">
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Cargando tus envíos...</p>
+  </div>
 
-		<div class="tracking-box">
-			<input
-				type="text"
-				placeholder="Ej: TRK-983472"
-				#trackingInput
-			/>
-			<button (click)="goToTracking(trackingInput.value)">
-				Buscar
-			</button>
-		</div>
-	</div>
+  <div *ngIf="!loading" class="home-content">
+    <header class="home-header">
+      <div>
+        <h1 class="greeting">{{ getGreeting() }}, {{ getShortName() }}!</h1>
+        <p class="subtitle">Rastrea tus envíos fácilmente</p>
+      </div>
+      
+      <div class="user-menu">
+        <button class="user-btn" (click)="toggleUserMenu()">
+          <div class="user-avatar">
+            {{ userInitial }}
+          </div>
+          <span class="user-name">{{ getShortName() }}</span>
+          <i class="fas fa-chevron-down chevron"></i>
+        </button>
+        
+        <div *ngIf="showUserMenu" class="dropdown-menu">
+          <button class="dropdown-item" (click)="viewProfile()">
+            <i class="fas fa-user"></i>
+            Mi Perfil
+          </button>
+          <button class="dropdown-item" (click)="viewSettings()">
+            <i class="fas fa-cog"></i>
+            Configuración
+          </button>
+          <button class="dropdown-item logout" (click)="logout()">
+            <i class="fas fa-sign-out-alt"></i>
+            Cerrar Sesión
+          </button>
+        </div>
+      </div>
+    </header>
 
-	<div class="card shipper">
-		<h2>Envios</h2>
-		<p>Revisa tus envíos</p>
-		<button (click)="goTo('/login')">Entrar</button>
-	</div>
+    <div class="search-bar">
+      <i class="fas fa-search search-icon"></i>
+      <input 
+        type="text" 
+        [(ngModel)]="searchQuery"
+        placeholder="Buscar por tracking, destino o cliente..."
+        class="search-input"
+      />
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="stats-section">
+      <h2 class="section-title">Resumen de Envíos</h2>
+      <div class="stats-grid">
+        <div class="stat-card total">
+          <div class="stat-icon">
+            <i class="fas fa-box"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ stats.total }}</h3>
+            <p class="stat-label">Total</p>
+          </div>
+        </div>
+        
+        <div class="stat-card active">
+          <div class="stat-icon">
+            <i class="fas fa-truck"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ stats.active }}</h3>
+            <p class="stat-label">Activos</p>
+          </div>
+        </div>
+        
+        <div class="stat-card delivered">
+          <div class="stat-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ stats.delivered }}</h3>
+            <p class="stat-label">Entregados</p>
+          </div>
+        </div>
+        
+        <div class="stat-card pending">
+          <div class="stat-icon">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ stats.pending }}</h3>
+            <p class="stat-label">Pendientes</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="filters-section">
+      <div class="filter-buttons">
+        <button 
+          class="filter-btn" 
+          [class.active]="filter === 'all'"
+          (click)="filter = 'all'"
+        >
+          Todos
+        </button>
+        <button 
+          class="filter-btn" 
+          [class.active]="filter === 'active'"
+          (click)="filter = 'active'"
+        >
+          Activos
+        </button>
+        <button 
+          class="filter-btn" 
+          [class.active]="filter === 'delivered'"
+          (click)="filter = 'delivered'"
+        >
+          Entregados
+        </button>
+        <button 
+          class="filter-btn" 
+          [class.active]="filter === 'pending'"
+          (click)="filter = 'pending'"
+        >
+          Pendientes
+        </button>
+      </div>
+    </div>
+
+    <div class="quick-actions">
+      <h2 class="section-title">Acciones Rápidas</h2>
+      <div class="actions-grid">
+        <button class="action-btn primary" (click)="createNewShipment()">
+          <i class="fas fa-plus action-icon"></i>
+          <span class="action-label">Nuevo Envío</span>
+        </button>
+        
+        <button class="action-btn secondary" (click)="viewAllShipments()">
+          <i class="fas fa-list action-icon"></i>
+          <span class="action-label">Ver Todos</span>
+        </button>
+        
+        <button class="action-btn info" routerLink="/track">
+          <i class="fas fa-map-marker-alt action-icon"></i>
+          <span class="action-label">Rastrear</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="recent-shipments">
+      <div class="section-header">
+        <h2 class="section-title">Envíos Recientes</h2>
+        <button *ngIf="shipments.length > 0" class="see-all-btn" (click)="viewAllShipments()">
+          Ver todos <i class="fas fa-arrow-right ml-1"></i>
+        </button>
+      </div>
+
+      <div *ngIf="filteredShipments.length === 0" class="empty-state">
+        <i class="fas fa-box-open empty-icon"></i>
+        <h3>No hay envíos {{ filter !== 'all' ? 'con este filtro' : 'registrados' }}</h3>
+        <p *ngIf="filter === 'all'">Comienza creando tu primer envío</p>
+        <button class="create-btn" (click)="createNewShipment()">
+          <i class="fas fa-plus mr-2"></i>
+          Crear nuevo envío
+        </button>
+      </div>
+
+      <div *ngIf="filteredShipments.length > 0" class="shipments-list">
+        <div *ngFor="let shipment of filteredShipments" 
+             class="shipment-card"
+             (click)="viewShipmentDetail(shipment.shipmentId)">
+          
+          <div class="shipment-header">
+            <div>
+              <h3 class="tracking-number">
+                #{{ shipment.trackingNumber }}
+              </h3>
+              <p class="customer-name">{{ shipment.customerName }}</p>
+            </div>
+            <span class="status-badge" [class]="'status-' + getStatusColor(shipment.shipmentStatus)">
+              {{ getStatusText(shipment.shipmentStatus) }}
+            </span>
+          </div>
+
+          <div class="shipment-details">
+            <div class="detail-item">
+              <i class="fas fa-map-marker-alt detail-icon"></i>
+              <span class="detail-text">{{ shipment.destination }}</span>
+            </div>
+            
+            <div class="detail-item">
+              <i class="fas fa-calendar-alt detail-icon"></i>
+              <span class="detail-text">
+                {{ shipment.shippedAt | date:'dd/MM/yyyy' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="shipment-footer">
+            <span class="shipment-type">{{ shipment.description || 'Estándar' }}</span>
+            <span class="view-details">
+              Ver detalles <i class="fas fa-arrow-right ml-1"></i>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="floating-btn" (click)="createNewShipment()">
+      <i class="fas fa-plus floating-icon"></i>
+      <span class="floating-text">Nuevo Envío</span>
+    </button>
+  </div>
 </div>

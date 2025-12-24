@@ -1,34 +1,36 @@
 export interface Shipment {
-	shipmentId: number;
-	trackingNumber: string;
-	shippedAt: Date;
-	description: string;
-	destination: string;
-	receivedBy: string;
-	receivedAt?: Date;
-	shipmentStatus: string;
-	customerName: string;
-	userName: string;
+  shipmentId: number;
+  trackingNumber: string;
+  shippedAt: Date | string;
+  description: string;
+  destination: string;
+  receivedBy: string;
+  receivedAt?: Date | string;
+  shipmentStatus: string;
+  customerName: string;
+  userName: string;
+  customerId: number;
+  userId: number;
 }
 
 export interface CreateShipment {
-	customerId: number;
-	userId: number;
-	trackingNumber: string;
-	description: string;
-	destination: string;
+  customerId: number;
+  userId: number;
+  trackingNumber: string;
+  description: string;
+  destination: string;
 }
 
 export interface UpdateShipment {
-	shipmentId: number;
-	trackingNumber: string;
-	description: string;
-	destination: string;
+  shipmentId: number;
+  trackingNumber: string;
+  description: string;
+  destination: string;
 }
 
 export interface UpdateShipmentStatus {
-	shipmentId: number;
-	shipmentStatus: string;
-	receivedBy?: string;
-	receivedAt?: Date;
+  shipmentId: number;
+  shipmentStatus: string;
+  receivedBy?: string;
+  receivedAt?: Date;
 }

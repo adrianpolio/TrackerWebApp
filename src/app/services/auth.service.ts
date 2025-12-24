@@ -8,11 +8,11 @@ import { LoginDto, AuthResponseDto } from '../models/auth.model';
   providedIn: 'root'
 })
 export class AuthService {
-    private http = inject(HttpClient);
-	private apiUrl = `${environment.apiUrl}/Auth/login`;
+  private http = inject(HttpClient);
+  private apiUrl = `${environment.apiUrl}/Auth`;
 
   login(dto: LoginDto): Observable<AuthResponseDto> {
-    return this.http.post<AuthResponseDto>(`${this.apiUrl}`, dto);
+    return this.http.post<AuthResponseDto>(`${this.apiUrl}/login`, dto);
   }
 
   logout() {
@@ -29,9 +29,19 @@ export class AuthService {
     return localStorage.getItem('token');
   }
 
-  getUser() {
+  getUser(): any | null {
     const user = localStorage.getItem('user');
     return user ? JSON.parse(user) : null;
+  }
+
+  getUserId(): number | null {
+    const user = this.getUser();
+    return user ? (user.userId || user.id) : null;
+  }
+
+  getUserName(): string | null {
+    const user = this.getUser();
+    return user ? user.name : null;
   }
 
   isLoggedIn(): boolean {

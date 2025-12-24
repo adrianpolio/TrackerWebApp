@@ -1,0 +1,154 @@
+<div class="create-shipment-container">
+  <div class="create-shipment-card">
+    <div class="card-header">
+      <button class="btn-back" (click)="onCancel()">
+        <i class="fas fa-arrow-left"></i>
+        Volver al Inicio
+      </button>
+      <div>
+        <h2 class="card-title">
+          Crear Nuevo Envío
+        </h2>
+        <p class="card-subtitle">Completa los datos del envío</p>
+      </div>
+    </div>
+
+    <div *ngIf="loading" class="loading-overlay">
+      <div class="spinner"></div>
+      <p>Cargando información...</p>
+    </div>
+
+    <form [formGroup]="shipmentForm" (ngSubmit)="onSubmit()" class="create-shipment-form" *ngIf="!loading">
+      <div class="form-group-custom">
+        <label class="form-label">
+          <i class="fas fa-user-tie"></i>
+          Cliente *
+        </label>
+        <select formControlName="customerId" class="form-control-custom"
+          [class.is-invalid]="isFieldInvalid('customerId')">
+          <option value="">Seleccionar cliente</option>
+          <option *ngFor="let customer of customers" [value]="customer.customerId">
+            {{ customer.name }} - {{ customer.email }}
+          </option>
+        </select>
+        <div *ngIf="isFieldInvalid('customerId')" class="invalid-feedback-custom">
+          <i class="fas fa-exclamation-triangle"></i>
+          {{ getFieldError('customerId') }}
+        </div>
+        <small *ngIf="getSelectedCustomerName()" class="form-help">
+          Cliente seleccionado: <strong>{{ getSelectedCustomerName() }}</strong>
+        </small>
+      </div>
+
+      <div class="form-group-custom">
+        <label class="form-label">
+          <i class="fas fa-barcode"></i>
+          Número de Tracking *
+        </label>
+        <div class="input-with-action">
+          <input formControlName="trackingNumber" type="text" class="form-control-custom"
+            [class.is-invalid]="isFieldInvalid('trackingNumber')" placeholder="Ej: TRK-0001" />
+          <button type="button" class="btn-generate" (click)="generateTrackingNumber()" title="Generar nuevo número">
+            <i class="fas fa-redo"></i>
+          </button>
+        </div>
+        <div *ngIf="isFieldInvalid('trackingNumber')" class="invalid-feedback-custom">
+          <i class="fas fa-exclamation-triangle"></i>
+          {{ getFieldError('trackingNumber') }}
+        </div>
+        <small class="form-help">Formato: TRK-XXXX (se genera automáticamente)</small>
+      </div>
+
+      <div class="form-group-custom">
+        <label class="form-label">
+          <i class="fas fa-file-alt"></i>
+          Descripción *
+        </label>
+        <textarea formControlName="description" class="form-control-custom"
+          [class.is-invalid]="isFieldInvalid('description')" rows="3"
+          placeholder="Describe el contenido del envío. Ej: 'Laptop Lenovo ThinkPad'"></textarea>
+        <div *ngIf="isFieldInvalid('description')" class="invalid-feedback-custom">
+          <i class="fas fa-exclamation-triangle"></i>
+          {{ getFieldError('description') }}
+        </div>
+        <small class="form-help">Máximo 200 caracteres</small>
+      </div>
+
+      <div class="form-group-custom">
+        <label class="form-label">
+          <i class="fas fa-map-marker-alt"></i>
+          Dirección de Destino *
+        </label>
+        <textarea formControlName="destination" class="form-control-custom"
+          [class.is-invalid]="isFieldInvalid('destination')" rows="3"
+          placeholder="Ingresa la dirección completa del destino. Ej: 'Av. Quito 123, Lima'"></textarea>
+        <div *ngIf="isFieldInvalid('destination')" class="invalid-feedback-custom">
+          <i class="fas fa-exclamation-triangle"></i>
+          {{ getFieldError('destination') }}
+        </div>
+        <small class="form-help">Máximo 150 caracteres</small>
+      </div>
+
+      <div class="summary-card" *ngIf="shipmentForm.valid">
+        <h4 class="summary-title">
+          <i class="fas fa-clipboard-check"></i>
+          Resumen del Envío
+        </h4>
+        <div class="summary-content">
+          <div class="summary-item">
+            <span class="summary-label">Cliente:</span>
+            <span class="summary-value">{{ getSelectedCustomerName() }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Tracking:</span>
+            <span class="summary-value">{{ shipmentForm.get('trackingNumber')?.value }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Descripción:</span>
+            <span class="summary-value">{{ shipmentForm.get('description')?.value }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Destino:</span>
+            <span class="summary-value">{{ shipmentForm.get('destination')?.value }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="errorMessage" class="alert alert-danger alert-custom">
+        <i class="fas fa-exclamation-circle"></i>
+        {{ errorMessage }}
+      </div>
+
+      <div *ngIf="successMessage" class="alert alert-success alert-custom">
+        <i class="fas fa-check-circle"></i>
+        {{ successMessage }}
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" (click)="onCancel()" [disabled]="submitting">
+          <i class="fas fa-times"></i>
+          Cancelar
+        </button>
+
+        <button type="submit" class="btn-submit" [disabled]="shipmentForm.invalid || submitting"
+          [class.loading]="submitting">
+          <span *ngIf="!submitting">
+            <i class="fas fa-save"></i>
+            Crear Envío
+          </span>
+          <span *ngIf="submitting" class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            Creando...
+          </span>
+        </button>
+      </div>
+    </form>
+
+    <div class="form-footer">
+      <p class="form-help">
+        <i class="fas fa-info-circle"></i>
+        Todos los campos marcados con * son obligatorios
+      </p>
+    </div>
+  </div>
+</div>
