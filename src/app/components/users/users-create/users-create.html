@@ -1,0 +1,124 @@
+<div class="register-container">
+  <div class="register-card">
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+      <h2 class="form-title">Crear Nueva Cuenta</h2>
+      <p class="form-subtitle">Regístrate en nuestra App TrackerLog</p>
+
+      <div *ngIf="errorMessage" class="alert alert-danger alert-custom">
+        <i class="fas fa-exclamation-circle"></i>
+        {{ errorMessage }}
+      </div>
+
+      <div *ngIf="successMessage" class="alert alert-success alert-custom">
+        <i class="fas fa-check-circle"></i>
+        {{ successMessage }}
+      </div>
+
+      <div class="form-group-custom">
+        <label class="form-label">
+          <i class="fas fa-user icon-left"></i>
+          Nombre Completo *
+        </label>
+        <input 
+          formControlName="name" 
+          type="text" 
+          class="form-control-custom" 
+          placeholder="Ingresa tu nombre completo"
+          [class.is-invalid]="registerForm.get('name')?.invalid && registerForm.get('name')?.touched"
+        />
+        <div *ngIf="registerForm.get('name')?.invalid && registerForm.get('name')?.touched" class="invalid-feedback-custom">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span *ngIf="registerForm.get('name')?.errors?.['required']">
+            El nombre es requerido
+          </span>
+          <span *ngIf="registerForm.get('name')?.errors?.['minlength']">
+            El nombre debe tener al menos 3 caracteres
+          </span>
+        </div>
+      </div>
+
+      <div class="form-group-custom">
+        <label class="form-label">
+          <i class="fas fa-envelope icon-left"></i>
+          Correo Electrónico *
+        </label>
+        <input 
+          formControlName="email" 
+          type="email" 
+          class="form-control-custom" 
+          placeholder="usuario@empresa.com"
+          [class.is-invalid]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched"
+        />
+        <div *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" class="invalid-feedback-custom">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span *ngIf="registerForm.get('email')?.errors?.['required']">
+            El correo electrónico es requerido
+          </span>
+          <span *ngIf="registerForm.get('email')?.errors?.['email']">
+            Ingresa un correo electrónico válido
+          </span>
+        </div>
+      </div>
+
+      <div class="form-group-custom">
+        <label class="form-label">
+          <i class="fas fa-lock icon-left"></i>
+          Contraseña *
+        </label>
+        <div class="password-input-container">
+          <input 
+            formControlName="passwordHash" 
+            [type]="showPassword ? 'text' : 'password'" 
+            class="form-control-custom" 
+            placeholder="Mínimo 6 caracteres"
+            [class.is-invalid]="registerForm.get('passwordHash')?.invalid && registerForm.get('passwordHash')?.touched"
+          />
+          <button 
+            type="button" 
+            class="password-toggle"
+            (click)="togglePasswordVisibility()"
+          >
+            <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+          </button>
+        </div>
+        <div *ngIf="registerForm.get('passwordHash')?.invalid && registerForm.get('passwordHash')?.touched" class="invalid-feedback-custom">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span *ngIf="registerForm.get('passwordHash')?.errors?.['required']">
+            La contraseña es requerida
+          </span>
+          <span *ngIf="registerForm.get('passwordHash')?.errors?.['minlength']">
+            La contraseña debe tener al menos 6 caracteres
+          </span>
+        </div>
+        <small class="form-text text-muted">
+          <i class="fas fa-info-circle"></i> La contraseña se almacenará de forma segura
+        </small>
+      </div>
+
+      <button 
+        type="submit" 
+        class="btn-register" 
+        [disabled]="registerForm.invalid || isLoading"
+        [class.loading]="isLoading"
+      >
+        <span *ngIf="!isLoading">
+          <i class="fas fa-user-plus"></i>
+          Crear Cuenta
+        </span>
+        <span *ngIf="isLoading" class="loading-spinner">
+          <i class="fas fa-spinner fa-spin"></i>
+          Registrando...
+        </span>
+      </button>
+
+      <div class="login-link">
+        <p>¿Ya tienes una cuenta? <a routerLink="/login" class="login-link-text">Iniciar Sesión</a></p>
+      </div>
+    </form>
+
+    <div class="register-footer">
+      <p>© 2025 TrackerLog - Sistema de Gestión de Envíos</p>
+      <p class="version">v2.1.0</p>
+    </div>
+  </div>
+</div>

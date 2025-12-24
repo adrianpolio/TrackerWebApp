@@ -6,7 +6,6 @@ export interface User {
 	isActive: boolean;
 	role: string;
 }
-
 export interface CreateUser {
 	passwordHash: string;
 	name: string;

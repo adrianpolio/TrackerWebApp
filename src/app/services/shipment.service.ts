@@ -9,7 +9,7 @@ import { Shipment, CreateShipment, UpdateShipment, UpdateShipmentStatus } from "
 })
 export class ShipmentService {
 	private http = inject(HttpClient);
-	private apiUrl = `${environment.apiUrl}/shipment`;
+	private apiUrl = `${environment.apiUrl}/Shipment`;
 
 	getAllShipments(): Observable<Shipment[]> {
 		return this.http.get<Shipment[]>(this.apiUrl);

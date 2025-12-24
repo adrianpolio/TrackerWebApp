@@ -1,5 +1,5 @@
 import { Component, inject, OnInit } from "@angular/core";
-import { Router } from "@angular/router";
+import { Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { AuthService } from "../../services/auth.service";
 import { LoginDto, AuthResponseDto } from "../../models/auth.model";
@@ -16,7 +16,7 @@ export enum UserRole {
 @Component({
   selector: "app-login",
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
   templateUrl: "./login.html",
   styleUrls: ["./login.scss"]
 })
