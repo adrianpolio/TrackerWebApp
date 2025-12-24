@@ -15,16 +15,21 @@
     <p>Cargando información del envío...</p>
   </div>
 
-  <div *ngIf="error && !loadingData" class="error-state">
-    <i class="fas fa-exclamation-triangle"></i>
+  <div *ngIf="error && !loadingData && !canEdit" class="error-state permission-error">
+    <i class="fas fa-lock"></i>
     <h3>{{ error }}</h3>
+    <p>Serás redirigido automáticamente a los detalles del envío.</p>
     <div class="error-actions">
-      <button class="btn-retry" (click)="loadShipmentData()">Reintentar</button>
-      <button class="btn-back-detail" (click)="goBack()">Volver al detalle</button>
+      <button class="btn-back-detail" (click)="goBack()">Volver ahora</button>
     </div>
   </div>
 
-  <div *ngIf="!loadingData && shipment" class="edit-content">
+  <div *ngIf="!loadingData && shipment && canEdit" class="edit-content">
+    <div class="permission-info">
+      <i class="fas fa-check-circle"></i>
+      <span>Tienes permiso para editar este envío</span>
+    </div>
+
     <div class="current-info">
       <h3><i class="fas fa-info-circle"></i> Información Actual</h3>
       <div class="info-grid">

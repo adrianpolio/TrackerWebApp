@@ -148,25 +148,98 @@
 
     <div class="actions-section">
       <h3>Acciones</h3>
+      
+      <div *ngIf="!loading && shipment && !canEdit && !canDelete" class="permission-notice detailed-notice">
+        <i class="fas fa-info-circle"></i>
+        <div class="permission-content">
+          <strong>Información de permisos:</strong>
+          
+          <div *ngIf="!isCreator && shipment.shipmentStatusDescription !== 'Entregado'" class="permission-case">
+            <i class="fas fa-user-lock"></i>
+            <span>Solo el creador del envío puede editarlo o eliminarlo</span>
+          </div>
+          
+          <div *ngIf="isCreator && shipment.shipmentStatusDescription === 'Entregado'" class="permission-case">
+            <i class="fas fa-box-check"></i>
+            <span>No se puede editar o eliminar un envío que ya fue entregado</span>
+          </div>
+          
+          <div *ngIf="!isCreator && shipment.shipmentStatusDescription === 'Entregado'" class="permission-case">
+            <i class="fas fa-ban"></i>
+            <span>Solo el creador puede modificar envíos, y no se puede modificar porqu el envío ya fue entregado</span>
+          </div>
+          
+          <div *ngIf="!currentUserName || !shipment.userName" class="permission-case">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Solo el creador del envío puede editarlo o eliminarlo</span>
+          </div>
+          
+          <div class="permission-details">
+            <div class="detail-row">
+              <span class="label">Creador del envío:</span>
+              <span class="value">{{ shipment.userName }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Usuario actual:</span>
+              <span class="value">{{ currentUserName || 'No identificado' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Estado del envío:</span>
+              <span class="value status-indicator" [ngClass]="getStatusClass(shipment.shipmentStatusDescription)">
+                {{ shipment.shipmentStatusDescription }}
+              </span>
+            </div>
+            <div class="detail-row">
+              <span class="label">¿Puede editar?:</span>
+              <span class="value">{{ canEdit ? 'Sí' : 'No' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">¿Puede eliminar?:</span>
+              <span class="value">{{ canDelete ? 'Sí' : 'No' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div *ngIf="canEdit || canDelete" class="permission-granted">
+        <i class="fas fa-check-circle"></i>
+        <span>Tienes permiso para modificar este envío</span>
+      </div>
+      
       <div class="actions-grid">
         <a class="btn-action btn-dark" [routerLink]="['/shipments/list']">
           <i class="fas fa-list"></i>
           Ver todos los envíos
         </a>
-        <button class="btn-action btn-secondary" (click)="loadShipmentDetails()">
+        
+        <button class="btn-action btn-secondary" (click)="loadShipmentDetails()" [disabled]="loading">
           <i class="fas fa-sync-alt"></i>
           Actualizar
         </button>
-        <a class="btn-action btn-warning" [routerLink]="['/shipments/edit', shipment.shipmentId]"
-          *ngIf="shipment.shipmentStatusDescription !== 'Entregado'">
+        
+        <a class="btn-action btn-warning" 
+           [routerLink]="['/shipments/edit', shipment.shipmentId]" 
+           *ngIf="canEdit">
           <i class="fas fa-edit"></i>
           Editar Información
         </a>
-
-        <button class="btn-action btn-danger" [disabled]="shipment.shipmentStatusDescription === 'Entregado'"
-          (click)="cancelShipment()">
+        
+        <button class="btn-action btn-success" 
+                *ngIf="canEdit && shipment.shipmentStatusDescription !== 'Entregado'"
+                (click)="markAsDelivered()"
+                [disabled]="updatingStatus">
+          <i class="fas fa-check-circle"></i>
+          <span *ngIf="!updatingStatus">Marcar Entregado</span>
+          <span *ngIf="updatingStatus">Procesando...</span>
+        </button>
+        
+        <button class="btn-action btn-danger" 
+                *ngIf="canDelete"
+                (click)="cancelShipment()">
           <i class="fas fa-times"></i>
           Cancelar Envío
         </button>
       </div>
     </div>
+  </div>
+</div>

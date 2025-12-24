@@ -16,7 +16,13 @@ export class ShipmentsDetail implements OnInit, OnDestroy {
   loading: boolean = false;
   error: string | null = null;
   shipmentId: number | null = null;
-  
+  canDelete: boolean = false;
+  canEdit: boolean = false;
+  currentUserId: number | null = null;
+  currentUserName: string | null = null;
+  isLoggedIn: boolean = false;
+  permissionMessage: string = '';
+  isCreator: boolean = false; 
   updatingStatus: boolean = false;
   showUpdateForm: boolean = false;
   formattedCurrentDate: string = '';
@@ -26,12 +32,24 @@ export class ShipmentsDetail implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private shipmentService: ShipmentService,
-    private authService: AuthService
-  ) {}
+    public authService: AuthService
+  ) { }
 
   ngOnInit(): void {
-    this.updateCurrentDate(); // Formatear fecha inicial
-    
+    this.isLoggedIn = this.authService.isLoggedIn();
+
+    if (!this.isLoggedIn) {
+      this.error = 'Debes iniciar sesión para ver los detalles del envío';
+      setTimeout(() => {
+        this.router.navigate(['/login']);
+      }, 2000);
+      return;
+    }
+
+    this.currentUserId = this.authService.getUserId();
+    this.currentUserName = this.authService.getUserName();
+    this.updateCurrentDate();
+
     this.route.params.subscribe(params => {
       this.shipmentId = +params['id'];
       if (this.shipmentId) {
@@ -40,15 +58,13 @@ export class ShipmentsDetail implements OnInit, OnDestroy {
         this.error = 'ID de envío no válido';
       }
     });
-    
-    // Actualizar fecha cada minuto
+
     this.dateInterval = setInterval(() => {
       this.updateCurrentDate();
-    }, 60000); // 60000 ms = 1 minuto
+    }, 60000);
   }
 
   ngOnDestroy(): void {
-    // Limpiar intervalo cuando el componente se destruya
     if (this.dateInterval) {
       clearInterval(this.dateInterval);
     }
@@ -56,30 +72,83 @@ export class ShipmentsDetail implements OnInit, OnDestroy {
 
   loadShipmentDetails(): void {
     if (!this.shipmentId) return;
-    
+
     this.loading = true;
     this.error = null;
-    
+    this.canDelete = false;
+    this.canEdit = false;
+    this.isCreator = false; 
+
     this.shipmentService.getShipmentById(this.shipmentId)
       .subscribe({
         next: (data) => {
           this.shipment = data;
+          this.checkPermissions(data);
           this.loading = false;
           console.log('Detalles del envío:', data);
         },
         error: (err) => {
-          this.error = 'Error al cargar los detalles del envío';
-          this.loading = false;
-          console.error('Error loading shipment details:', err);
-          
-          // Si es error 404, redirigir después de 2 segundos
-          if (err.status === 404) {
-            setTimeout(() => {
-              this.router.navigate(['/shipments']);
-            }, 2000);
-          }
+          this.handleLoadError(err);
         }
       });
+  }
+
+  private checkPermissions(shipment: Shipment): void {
+    if (!this.currentUserName) {
+      this.canDelete = false;
+      this.canEdit = false;
+      this.isCreator = false;
+      this.permissionMessage = 'Usuario no identificado';
+      return;
+    }
+
+    const shipmentUserName = shipment.userName?.trim().toLowerCase() || '';
+    const currentUserName = this.currentUserName?.trim().toLowerCase() || '';
+
+    this.isCreator = shipmentUserName === currentUserName;
+    const isDelivered = shipment.shipmentStatusDescription === 'Entregado';
+
+    if (this.isCreator && !isDelivered) {
+      this.canDelete = true;
+      this.canEdit = true;
+      this.permissionMessage = 'Tienes permiso para editar y eliminar este envío';
+      console.log('PERMISO CONCEDIDO');
+    } else if (this.isCreator && isDelivered) {
+      this.canDelete = false;
+      this.canEdit = false;
+      this.permissionMessage = 'No se puede editar o eliminar un envío que ya ha sido entregado';
+      console.log('PERMISO DENEGADO: Envío entregado');
+    } else {
+      this.canDelete = false;
+      this.canEdit = false;
+      this.permissionMessage = `Solo el creador del envío (${shipment.userName}) puede editarlo o eliminarlo`;
+      console.log('PERMISO DENEGADO: No es el creador');
+    }
+
+    console.log('Permisos calculados:', {
+      isCreator: this.isCreator,
+      canEdit: this.canEdit,
+      canDelete: this.canDelete,
+      estado: shipment.shipmentStatusDescription
+    });
+  }
+
+  private handleLoadError(err: any): void {
+    this.error = 'Error al cargar los detalles del envío';
+    this.loading = false;
+    console.error('Error loading shipment details:', err);
+
+    if (err.status === 404) {
+      this.error = 'El envío no fue encontrado';
+      setTimeout(() => {
+        this.router.navigate(['/']);
+      }, 2000);
+    } else if (err.status === 403) {
+      this.error = 'No tienes permiso para acceder a este envío';
+      setTimeout(() => {
+        this.router.navigate(['/']);
+      }, 2000);
+    }
   }
 
   updateCurrentDate(): void {
@@ -89,14 +158,14 @@ export class ShipmentsDetail implements OnInit, OnDestroy {
 
   formatDate(dateString: string | Date | null | undefined): string {
     if (!dateString) return 'No especificada';
-    
+
     try {
       const date = new Date(dateString);
-      
+
       if (isNaN(date.getTime())) {
         return 'Fecha inválida';
       }
-      
+
       return date.toLocaleDateString('es-PE', {
         year: 'numeric',
         month: 'long',
@@ -112,7 +181,7 @@ export class ShipmentsDetail implements OnInit, OnDestroy {
 
   getStatusClass(status: string): string {
     if (!status) return 'status-other';
-    
+
     const statusLower = status.toLowerCase();
     if (statusLower.includes('entregado')) return 'status-delivered';
     if (statusLower.includes('habilitado')) return 'status-enabled';
@@ -122,7 +191,7 @@ export class ShipmentsDetail implements OnInit, OnDestroy {
 
   getStatusIcon(status: string): string {
     if (!status) return 'fa-question-circle';
-    
+
     const statusLower = status.toLowerCase();
     if (statusLower.includes('entregado')) return 'fa-check-circle';
     if (statusLower.includes('habilitado')) return 'fa-shipping-fast';
@@ -130,56 +199,76 @@ export class ShipmentsDetail implements OnInit, OnDestroy {
     return 'fa-box';
   }
 
-  // Marcar como entregado
   markAsDelivered(): void {
     if (!this.shipmentId || !this.shipment) return;
-    
+
+    if (!this.canEdit) {
+      alert('Solo el creador del envío puede marcar como entregado');
+      return;
+    }
+
     const receivedBy = prompt('Ingrese el nombre de quien recibió el envío:');
     if (!receivedBy) {
       alert('Debe ingresar el nombre del receptor');
       return;
     }
-    
+
     this.updatingStatus = true;
-    
+
     const statusUpdate = {
       shipmentId: this.shipmentId,
       shipmentStatus: 'Entregado',
       receivedBy: receivedBy,
       receivedAt: new Date()
     };
-    
+
     this.shipmentService.updateShipmentStatus(this.shipmentId, statusUpdate)
       .subscribe({
         next: (updated) => {
           this.shipment = updated;
           this.updatingStatus = false;
+          this.canDelete = false;
+          this.canEdit = false;
+          this.isCreator = false;
           alert('¡Envío marcado como entregado exitosamente!');
         },
         error: (err) => {
           this.updatingStatus = false;
-          alert('Error al actualizar el estado del envío');
+
+          if (err.status === 403) {
+            alert('No tienes permiso para actualizar este envío');
+          } else {
+            alert('Error al actualizar el estado del envío');
+          }
           console.error('Error updating status:', err);
         }
       });
   }
 
-  // Cancelar envío
   cancelShipment(): void {
-    if (!this.shipmentId || !this.shipment) return;
-    
+    if (!this.shipmentId || !this.shipment || !this.canDelete) {
+      alert('No tienes permiso para eliminar este envío. Solo el creador puede cancelarlo.');
+      return;
+    }
+
     if (!confirm('¿Está seguro de que desea cancelar este envío? Esta acción no se puede deshacer.')) {
       return;
     }
-    
+
     this.shipmentService.deleteShipment(this.shipmentId)
       .subscribe({
         next: (response) => {
           alert(response.message);
-          this.router.navigate(['/shipments']);
+          this.router.navigate(['/']);
         },
         error: (err) => {
-          alert('Error al cancelar el envío');
+          if (err.status === 403) {
+            alert('No tienes permiso para eliminar este envío');
+          } else if (err.status === 409) {
+            alert('No se puede cancelar un envío que ya ha sido entregado');
+          } else {
+            alert('Error al cancelar el envío');
+          }
           console.error('Error deleting shipment:', err);
         }
       });
@@ -191,7 +280,7 @@ export class ShipmentsDetail implements OnInit, OnDestroy {
 
   copyTrackingNumber(): void {
     if (!this.shipment) return;
-    
+
     navigator.clipboard.writeText(this.shipment.trackingNumber)
       .then(() => {
         alert('Número de tracking copiado al portapapeles');

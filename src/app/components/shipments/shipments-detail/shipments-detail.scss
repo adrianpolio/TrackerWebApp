@@ -5,7 +5,6 @@
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-// Header
 .detail-header {
   display: flex;
   align-items: center;
@@ -45,7 +44,6 @@
   }
 }
 
-// Estados
 .loading-state, .error-state {
   text-align: center;
   padding: 60px 20px;
@@ -111,12 +109,10 @@
   }
 }
 
-// Contenido principal
 .detail-content {
   animation: fadeIn 0.3s ease-out;
 }
 
-// Encabezado con tracking
 .shipment-header {
   display: flex;
   justify-content: space-between;
@@ -231,7 +227,6 @@
   }
 }
 
-// Tarjetas de información
 .info-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -303,7 +298,6 @@
   }
 }
 
-// Timeline
 .timeline {
   position: relative;
   padding-left: 30px;
@@ -363,7 +357,6 @@
   }
 }
 
-// Sección de acciones
 .actions-section {
   background: white;
   padding: 24px;
@@ -447,79 +440,6 @@
   }
 }
 
-// Sección QR
-.qr-section {
-  background: white;
-  padding: 24px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  
-  h3 {
-    margin: 0 0 20px 0;
-    color: #2d3748;
-    font-size: 18px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    
-    i {
-      color: #4299e1;
-    }
-  }
-  
-  .qr-placeholder {
-    text-align: center;
-    
-    .qr-code {
-      display: inline-block;
-      padding: 30px;
-      background: #f7fafc;
-      border-radius: 12px;
-      border: 1px solid #e2e8f0;
-      
-      .qr-image {
-        width: 150px;
-        height: 150px;
-        background: white;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 15px;
-        border: 1px dashed #cbd5e0;
-        
-        i {
-          font-size: 60px;
-          color: #cbd5e0;
-        }
-      }
-      
-      .qr-text {
-        color: #2d3748;
-        margin: 0 0 8px 0;
-        font-weight: 500;
-      }
-      
-      .qr-tracking {
-        color: #718096;
-        font-family: 'SF Mono', monospace;
-        font-size: 12px;
-      }
-    }
-    
-    .qr-note {
-      color: #718096;
-      font-size: 14px;
-      margin-top: 20px;
-      max-width: 400px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-  }
-}
-
-// Animaciones
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
@@ -541,7 +461,6 @@
   100% { transform: scale(1); }
 }
 
-// Responsive
 @media (max-width: 768px) {
   .shipment-detail-container {
     padding: 16px;
@@ -577,8 +496,134 @@
   .actions-grid {
     grid-template-columns: 1fr;
   }
+}
+/* Estilos para el mensaje de permisos detallado */
+.detailed-notice {
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.permission-content {
+  flex: 1;
+}
+
+.permission-case {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 6px;
   
-  .qr-placeholder .qr-code {
-    padding: 20px;
+  i {
+    font-size: 16px;
+    min-width: 20px;
+  }
+  
+  &:nth-child(2) i { /* Caso 1: No es creador */
+    color: #e53e3e;
+  }
+  
+  &:nth-child(3) i { /* Caso 2: Es creador pero entregado */
+    color: #38a169;
+  }
+  
+  &:nth-child(4) i { /* Caso 3: No es creador y entregado */
+    color: #d69e2e;
+  }
+  
+  &:nth-child(5) i { /* Caso genérico */
+    color: #718096;
+  }
+}
+
+.permission-details {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 12px;
+  margin-top: 12px;
+  font-size: 13px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+  
+  .label {
+    color: #718096;
+    font-weight: 500;
+  }
+  
+  .value {
+    color: #2d3748;
+    font-weight: 500;
+    
+    &.status-indicator {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      
+      &.status-delivered {
+        background: #c6f6d5;
+        color: #22543d;
+      }
+      
+      &.status-enabled {
+        background: #bee3f8;
+        color: #2a4365;
+      }
+      
+      &.status-pending {
+        background: #feebc8;
+        color: #744210;
+      }
+      
+      &.status-other {
+        background: #e2e8f0;
+        color: #4a5568;
+      }
+    }
+  }
+}
+
+.permission-granted {
+  background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
+  border: 1px solid #68d391;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: fadeIn 0.5s ease-out;
+  
+  i {
+    color: #22543d;
+    font-size: 18px;
+  }
+  
+  span {
+    color: #22543d;
+    font-weight: 500;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
