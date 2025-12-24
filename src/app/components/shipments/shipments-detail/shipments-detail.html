@@ -1,1 +1,172 @@
-<p>shipments-detail works!</p>
+<div class="shipment-detail-container">
+  <div class="detail-header">
+    <button class="btn-back" (click)="goBack()">
+      <i class="fas fa-arrow-left"></i> Volver
+    </button>
+    <h1>Detalles del Envío</h1>
+  </div>
+
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Cargando detalles del envío...</p>
+  </div>
+
+  <div *ngIf="error && !loading" class="error-state">
+    <i class="fas fa-exclamation-triangle"></i>
+    <h3>{{ error }}</h3>
+    <p>Intente nuevamente o regrese a la lista de envíos.</p>
+    <button class="btn-retry" (click)="loadShipmentDetails()">Reintentar</button>
+    <button class="btn-back-list" (click)="goBack()">Volver a la lista</button>
+  </div>
+
+  <div *ngIf="!loading && shipment" class="detail-content">
+    <div class="shipment-header">
+      <div class="tracking-section">
+        <div class="tracking-label">Número de Tracking</div>
+        <div class="tracking-number">
+          <span>{{ shipment.trackingNumber }}</span>
+          <button class="btn-copy" (click)="copyTrackingNumber()" title="Copiar">
+            <i class="far fa-copy"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="status-section">
+        <div class="status-label">Estado Actual</div>
+        <div class="status-badge" [ngClass]="getStatusClass(shipment.shipmentStatusDescription)">
+          <i class="fas" [ngClass]="getStatusIcon(shipment.shipmentStatusDescription)"></i>
+          {{ shipment.shipmentStatusDescription }}
+        </div>
+      </div>
+    </div>
+
+    <div class="info-cards">
+      <div class="info-card">
+        <div class="card-header">
+          <i class="fas fa-info-circle"></i>
+          <h3>Información Básica</h3>
+        </div>
+        <div class="card-body">
+          <div class="info-row">
+            <span class="label">ID de Envío:</span>
+            <span class="value">{{ shipment.shipmentId }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Descripción:</span>
+            <span class="value">{{ shipment.description }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Destino:</span>
+            <span class="value">{{ shipment.destination }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Cliente:</span>
+            <span class="value">{{ shipment.customerName }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="card-header">
+          <i class="fas fa-calendar-alt"></i>
+          <h3>Fechas Importantes</h3>
+        </div>
+        <div class="card-body">
+          <div class="info-row">
+            <span class="label">Fecha de Envío:</span>
+            <span class="value">{{ formatDate(shipment.shippedAt) }}</span>
+          </div>
+          <div class="info-row" *ngIf="shipment.receivedAt">
+            <span class="label">Fecha de Entrega:</span>
+            <span class="value">{{ formatDate(shipment.receivedAt) }}</span>
+          </div>
+          <div class="info-row" *ngIf="shipment.receivedBy">
+            <span class="label">Recibido por:</span>
+            <span class="value">{{ shipment.receivedBy }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Última actualización:</span>
+            <span class="value">{{ formattedCurrentDate }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="card-header">
+          <i class="fas fa-user"></i>
+          <h3>Información del Creador</h3>
+        </div>
+        <div class="card-body">
+          <div class="info-row">
+            <span class="label">Creado por:</span>
+            <span class="value">{{ shipment.userName }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Rol:</span>
+            <span class="value">Usuario del sistema</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="card-header">
+          <i class="fas fa-history"></i>
+          <h3>Historial del Envío</h3>
+        </div>
+        <div class="card-body">
+          <div class="timeline">
+            <div class="timeline-item completed">
+              <div class="timeline-marker"></div>
+              <div class="timeline-content">
+                <strong>Enviado</strong>
+                <small>{{ formatDate(shipment.shippedAt) }}</small>
+              </div>
+            </div>
+
+            <div class="timeline-item"
+              [ngClass]="{'completed': shipment.shipmentStatusDescription === 'Habilitado', 'current': shipment.shipmentStatusDescription === 'Habilitado'}">
+              <div class="timeline-marker"></div>
+              <div class="timeline-content">
+                <strong>En tránsito</strong>
+                <small *ngIf="shipment.shipmentStatusDescription === 'Habilitado'">Actualmente</small>
+              </div>
+            </div>
+
+            <div class="timeline-item"
+              [ngClass]="{'completed': shipment.shipmentStatusDescription === 'Entregado', 'current': shipment.shipmentStatusDescription === 'Entregado'}">
+              <div class="timeline-marker"></div>
+              <div class="timeline-content">
+                <strong>Entregado</strong>
+                <small *ngIf="shipment.receivedAt">{{ formatDate(shipment.receivedAt) }}</small>
+                <small *ngIf="!shipment.receivedAt">Pendiente</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions-section">
+      <h3>Acciones</h3>
+      <div class="actions-grid">
+        <a class="btn-action btn-dark" [routerLink]="['/shipments/list']">
+          <i class="fas fa-list"></i>
+          Ver todos los envíos
+        </a>
+        <button class="btn-action btn-secondary" (click)="loadShipmentDetails()">
+          <i class="fas fa-sync-alt"></i>
+          Actualizar
+        </button>
+        <a class="btn-action btn-warning" [routerLink]="['/shipments/edit', shipment.shipmentId]"
+          *ngIf="shipment.shipmentStatusDescription !== 'Entregado'">
+          <i class="fas fa-edit"></i>
+          Editar Información
+        </a>
+
+        <button class="btn-action btn-danger" [disabled]="shipment.shipmentStatusDescription === 'Entregado'"
+          (click)="cancelShipment()">
+          <i class="fas fa-times"></i>
+          Cancelar Envío
+        </button>
+      </div>
+    </div>

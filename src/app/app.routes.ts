@@ -4,6 +4,8 @@ import { LoginComponent } from './components/login/login';
 import { UsersCreate } from './components/users/users-create/users-create';
 import { ShipmentsCreate } from './components/shipments/shipments-create/shipments-create';
 import { ShipmentsList } from './components/shipments/shipments-list/shipments-list';
+import { ShipmentsDetail } from './components/shipments/shipments-detail/shipments-detail';
+import { ShipmentsEdit } from './components/shipments/shipments-edit/shipments-edit';
 
 export const routes: Routes = [
     { path: '', component: Home }, 
@@ -11,5 +13,7 @@ export const routes: Routes = [
     { path: 'login', component: LoginComponent},
     { path: 'register', component: UsersCreate },
     { path: 'shipments/create', component: ShipmentsCreate },
-    { path: 'shipments/list', component: ShipmentsList }
+    { path: 'shipments/list', component: ShipmentsList },
+    { path: 'shipments/detail/:id', component: ShipmentsDetail},
+    { path: 'shipments/edit/:id', component: ShipmentsEdit}
 ];

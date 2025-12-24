@@ -15,11 +15,9 @@ export class ShipmentService {
 		return this.http.get<any[]>(this.apiUrl).pipe(
 			map(data => data.map(item => ({
 				...item,
-				// Mapear shipmentStatusDescription a shipmentStatus
 				shipmentStatus: item.shipmentStatusDescription,
-				// Si el modelo espera estos campos, pero el API no los envía
-				customerId: item.customerId || 0, // Valor por defecto
-				userId: item.userId || 0 // Valor por defecto
+				customerId: item.customerId || 0, 
+				userId: item.userId || 0 
 			})))
 		);
 	}

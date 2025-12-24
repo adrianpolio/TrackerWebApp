@@ -1,0 +1,173 @@
+<div class="edit-shipment-container">
+  <div class="edit-header">
+    <button class="btn-back" (click)="goBack()">
+      <i class="fas fa-arrow-left"></i> Cancelar
+    </button>
+    <h1>Editar Envío</h1>
+    <div *ngIf="shipment" class="tracking-info">
+      <span class="tracking-label">Tracking:</span>
+      <span class="tracking-number">{{ shipment.trackingNumber }}</span>
+    </div>
+  </div>
+
+  <div *ngIf="loadingData" class="loading-data">
+    <div class="spinner"></div>
+    <p>Cargando información del envío...</p>
+  </div>
+
+  <div *ngIf="error && !loadingData" class="error-state">
+    <i class="fas fa-exclamation-triangle"></i>
+    <h3>{{ error }}</h3>
+    <div class="error-actions">
+      <button class="btn-retry" (click)="loadShipmentData()">Reintentar</button>
+      <button class="btn-back-detail" (click)="goBack()">Volver al detalle</button>
+    </div>
+  </div>
+
+  <div *ngIf="!loadingData && shipment" class="edit-content">
+    <div class="current-info">
+      <h3><i class="fas fa-info-circle"></i> Información Actual</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Estado:</label>
+          <span class="status-badge">{{ shipment.shipmentStatusDescription }}</span>
+        </div>
+        <div class="info-item">
+          <label>Fecha de envío:</label>
+          <span>{{ shipment.shippedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <div class="info-item">
+          <label>Cliente:</label>
+          <span>{{ shipment.customerName }}</span>
+        </div>
+        <div class="info-item">
+          <label>Creado por:</label>
+          <span>{{ shipment.userName }}</span>
+        </div>
+      </div>
+    </div>
+
+    <form [formGroup]="editForm" (ngSubmit)="onSubmit()" class="edit-form">
+      <div class="form-section">
+        <h3><i class="fas fa-edit"></i> Campos Editables</h3>
+        <p class="form-subtitle">Solo puedes modificar la descripción y el destino del envío.</p>
+
+        <div class="form-group">
+          <label for="trackingNumber">Número de Tracking</label>
+          <input type="text" id="trackingNumber" formControlName="trackingNumber" class="form-control readonly" readonly
+            placeholder="Número de tracking generado automáticamente">
+          <small class="form-help">Este campo no se puede modificar</small>
+        </div>
+
+        <div class="form-group">
+          <div class="label-container">
+            <label for="description">Descripción *</label>
+            <span class="char-counter" [ngClass]="{'warning': getRemainingChars('description', 200) < 20}">
+              {{ getRemainingChars('description', 200) }} caracteres restantes
+            </span>
+          </div>
+          <textarea id="description" formControlName="description" rows="4" class="form-control"
+            [ngClass]="{'is-invalid': isFieldInvalid('description')}"
+            placeholder="Describe el contenido del envío. Ej: 'Laptop Lenovo ThinkPad'"
+            (input)="editForm.get('description')?.updateValueAndValidity()">
+          </textarea>
+          <div *ngIf="isFieldInvalid('description')" class="invalid-feedback">
+            <i class="fas fa-exclamation-circle"></i>
+            {{ getFieldError('description') }}
+          </div>
+          <small class="form-help">Máximo 200 caracteres. Describe claramente el contenido.</small>
+        </div>
+
+        <div class="form-group">
+          <div class="label-container">
+            <label for="destination">Dirección de Destino *</label>
+            <span class="char-counter" [ngClass]="{'warning': getRemainingChars('destination', 150) < 20}">
+              {{ getRemainingChars('destination', 150) }} caracteres restantes
+            </span>
+          </div>
+          <textarea id="destination" formControlName="destination" rows="3" class="form-control"
+            [ngClass]="{'is-invalid': isFieldInvalid('destination')}"
+            placeholder="Ingresa la dirección completa del destino. Ej: 'Av. Quito 123, Lima'"
+            (input)="editForm.get('destination')?.updateValueAndValidity()">
+          </textarea>
+          <div *ngIf="isFieldInvalid('destination')" class="invalid-feedback">
+            <i class="fas fa-exclamation-circle"></i>
+            {{ getFieldError('destination') }}
+          </div>
+          <small class="form-help">Máximo 150 caracteres. Incluye dirección, ciudad y referencia si es
+            necesario.</small>
+        </div>
+
+        <div class="non-editable-info">
+          <h4><i class="fas fa-lock"></i> Campos no editables</h4>
+          <div class="non-editable-grid">
+            <div class="non-editable-item">
+              <label>Estado del envío:</label>
+              <span>{{ shipment.shipmentStatusDescription }}</span>
+            </div>
+            <div class="non-editable-item">
+              <label>Cliente:</label>
+              <span>{{ shipment.customerName }}</span>
+            </div>
+            <div class="non-editable-item">
+              <label>Fecha de creación:</label>
+              <span>{{ shipment.shippedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+            <div class="non-editable-item">
+              <label>Creado por:</label>
+              <span>{{ shipment.userName }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="error && !loadingData" class="error-state">
+        <i class="fas fa-exclamation-triangle"></i>
+        <h3>{{ error }}</h3>
+        <div class="error-actions">
+          <button class="btn-retry" (click)="loadShipmentData()">Reintentar</button>
+          <button class="btn-back-detail" (click)="goBack()">Volver al detalle</button>
+        </div>
+      </div>
+      <br>
+
+      <div *ngIf="successMessage" class="success-message">
+        <i class="fas fa-check-circle"></i>
+        <p>{{ successMessage }}</p>
+        <small>Redirigiendo al detalle...</small>
+      </div>
+
+      <div class="form-actions">
+        <div class="actions-left">
+          <button type="button" class="btn btn-cancel" (click)="cancelEdit()" [disabled]="loading">
+            <i class="fas fa-times"></i> Cancelar
+          </button>
+        </div>
+
+        <div class="actions-right">
+          <button type="button" class="btn btn-reset" (click)="loadShipmentData()" [disabled]="loading || loadingData">
+            <i class="fas fa-undo"></i> Restablecer
+          </button>
+
+          <button type="submit" class="btn btn-save" [disabled]="editForm.invalid || loading || !editForm.dirty">
+            <i class="fas fa-save"></i>
+            <span *ngIf="!loading">Guardar Cambios</span>
+            <span *ngIf="loading">
+              <i class="fas fa-spinner fa-spin"></i> Guardando...
+            </span>
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <div *ngIf="editForm.invalid && editForm.touched" class="form-validation">
+      <h4><i class="fas fa-exclamation-triangle"></i> Correcciones requeridas:</h4>
+      <ul>
+        <li *ngIf="editForm.get('description')?.hasError('required')">La descripción es requerida</li>
+        <li *ngIf="editForm.get('description')?.hasError('maxlength')">La descripción excede el límite de caracteres
+        </li>
+        <li *ngIf="editForm.get('destination')?.hasError('required')">El destino es requerido</li>
+        <li *ngIf="editForm.get('destination')?.hasError('maxlength')">El destino excede el límite de caracteres</li>
+      </ul>
+    </div>
+  </div>
+</div>

@@ -254,7 +254,7 @@ export class Home implements OnInit {
   }
 
   viewShipmentDetail(shipmentId: number): void {
-    this.router.navigate(['/shipments', shipmentId]);
+    this.router.navigate(['/shipments/detail', shipmentId]);
   }
 
   createNewShipment(): void {
