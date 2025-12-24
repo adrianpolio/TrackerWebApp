@@ -8,9 +8,9 @@
     <header class="home-header">
       <div>
         <h1 class="greeting">{{ getGreeting() }}, {{ getShortName() }}!</h1>
-        <p class="subtitle">Rastrea tus envíos fácilmente</p>
+        <p class="subtitle">Rastrea tus envíos fácilmente con nosotros</p>
       </div>
-      
+
       <div class="user-menu">
         <button class="user-btn" (click)="toggleUserMenu()">
           <div class="user-avatar">
@@ -19,16 +19,8 @@
           <span class="user-name">{{ getShortName() }}</span>
           <i class="fas fa-chevron-down chevron"></i>
         </button>
-        
+
         <div *ngIf="showUserMenu" class="dropdown-menu">
-          <button class="dropdown-item" (click)="viewProfile()">
-            <i class="fas fa-user"></i>
-            Mi Perfil
-          </button>
-          <button class="dropdown-item" (click)="viewSettings()">
-            <i class="fas fa-cog"></i>
-            Configuración
-          </button>
           <button class="dropdown-item logout" (click)="logout()">
             <i class="fas fa-sign-out-alt"></i>
             Cerrar Sesión
@@ -36,138 +28,106 @@
         </div>
       </div>
     </header>
-
-    <div class="search-bar">
-      <i class="fas fa-search search-icon"></i>
-      <input 
-        type="text" 
-        [(ngModel)]="searchQuery"
-        placeholder="Buscar por tracking, destino o cliente..."
-        class="search-input"
-      />
-    </div>
-
-    <div class="stats-section">
-      <h2 class="section-title">Resumen de Envíos</h2>
-      <div class="stats-grid">
-        <div class="stat-card total">
-          <div class="stat-icon">
-            <i class="fas fa-box"></i>
-          </div>
-          <div class="stat-content">
-            <h3 class="stat-value">{{ stats.total }}</h3>
-            <p class="stat-label">Total</p>
-          </div>
-        </div>
-        
-        <div class="stat-card active">
-          <div class="stat-icon">
-            <i class="fas fa-truck"></i>
-          </div>
-          <div class="stat-content">
-            <h3 class="stat-value">{{ stats.active }}</h3>
-            <p class="stat-label">Activos</p>
-          </div>
-        </div>
-        
-        <div class="stat-card delivered">
-          <div class="stat-icon">
-            <i class="fas fa-check-circle"></i>
-          </div>
-          <div class="stat-content">
-            <h3 class="stat-value">{{ stats.delivered }}</h3>
-            <p class="stat-label">Entregados</p>
-          </div>
-        </div>
-        
-        <div class="stat-card pending">
-          <div class="stat-icon">
-            <i class="fas fa-clock"></i>
-          </div>
-          <div class="stat-content">
-            <h3 class="stat-value">{{ stats.pending }}</h3>
-            <p class="stat-label">Pendientes</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="filters-section">
-      <div class="filter-buttons">
-        <button 
-          class="filter-btn" 
-          [class.active]="filter === 'all'"
-          (click)="filter = 'all'"
-        >
-          Todos
-        </button>
-        <button 
-          class="filter-btn" 
-          [class.active]="filter === 'active'"
-          (click)="filter = 'active'"
-        >
-          Activos
-        </button>
-        <button 
-          class="filter-btn" 
-          [class.active]="filter === 'delivered'"
-          (click)="filter = 'delivered'"
-        >
-          Entregados
-        </button>
-        <button 
-          class="filter-btn" 
-          [class.active]="filter === 'pending'"
-          (click)="filter = 'pending'"
-        >
-          Pendientes
-        </button>
-      </div>
-    </div>
-
     <div class="quick-actions">
-      <h2 class="section-title">Acciones Rápidas</h2>
       <div class="actions-grid">
         <button class="action-btn primary" (click)="createNewShipment()">
           <i class="fas fa-plus action-icon"></i>
           <span class="action-label">Nuevo Envío</span>
         </button>
-        
+
         <button class="action-btn secondary" (click)="viewAllShipments()">
           <i class="fas fa-list action-icon"></i>
           <span class="action-label">Ver Todos</span>
         </button>
-        
+
         <button class="action-btn info" routerLink="/track">
           <i class="fas fa-map-marker-alt action-icon"></i>
           <span class="action-label">Rastrear</span>
         </button>
       </div>
     </div>
+    <div class="filters-section">
+      <h3 class="section-title">Filtrar por Estado</h3>
+      <div class="filter-buttons">
+        <button class="filter-btn" [class.active]="filter === 'all'" (click)="filter = 'all'">
+          <i class="fas fa-list"></i>
+          Todos
+        </button>
+
+        <button class="filter-btn habilitado" [class.active]="filter === '1'" (click)="filter = '1'">
+          <i class="fas fa-play-circle"></i>
+          Habilitado
+        </button>
+
+        <button class="filter-btn empaquetado" [class.active]="filter === '2'" (click)="filter = '2'">
+          <i class="fas fa-box"></i>
+          Empaquetado
+        </button>
+
+        <button class="filter-btn transito" [class.active]="filter === '3'" (click)="filter = '3'">
+          <i class="fas fa-truck"></i>
+          En Tránsito
+        </button>
+
+        <button class="filter-btn destino" [class.active]="filter === '4'" (click)="filter = '4'">
+          <i class="fas fa-map-marker-alt"></i>
+          Llegó a Destino
+        </button>
+
+        <button class="filter-btn entregado" [class.active]="filter === '5'" (click)="filter = '5'">
+          <i class="fas fa-check-circle"></i>
+          Entregado
+        </button>
+
+        <button class="filter-btn devuelto" [class.active]="filter === '6'" (click)="filter = '6'">
+          <i class="fas fa-undo"></i>
+          Devuelto
+        </button>
+      </div>
+
+      <div *ngIf="filter !== 'all'" class="active-filter">
+        <i class="fas fa-filter"></i>
+        Mostrando: {{ getActiveFilterName() }}
+        <button class="clear-filter" (click)="filter = 'all'">
+          <i class="fas fa-times"></i> Limpiar
+        </button>
+      </div>
+    </div>
+
 
     <div class="recent-shipments">
       <div class="section-header">
         <h2 class="section-title">Envíos Recientes</h2>
-        <button *ngIf="shipments.length > 0" class="see-all-btn" (click)="viewAllShipments()">
-          Ver todos <i class="fas fa-arrow-right ml-1"></i>
-        </button>
+        <div class="header-actions">
+          <button class="refresh-btn" (click)="onRefresh()" [disabled]="refreshing">
+            <i class="fas fa-sync-alt" [class.fa-spin]="refreshing"></i>
+            {{ refreshing ? 'Actualizando...' : 'Actualizar' }}
+          </button>
+          <button *ngIf="shipments.length > 0" class="see-all-btn" (click)="viewAllShipments()">
+            Ver todos <i class="fas fa-arrow-right ml-1"></i>
+          </button>
+        </div>
       </div>
 
       <div *ngIf="filteredShipments.length === 0" class="empty-state">
         <i class="fas fa-box-open empty-icon"></i>
-        <h3>No hay envíos {{ filter !== 'all' ? 'con este filtro' : 'registrados' }}</h3>
+        <h3>No hay envíos {{ filter !== 'all' ? 'con este estado' : 'registrados' }}</h3>
         <p *ngIf="filter === 'all'">Comienza creando tu primer envío</p>
+        <p *ngIf="filter !== 'all'">No se encontraron envíos con estado "{{ getActiveFilterName() }}"</p>
         <button class="create-btn" (click)="createNewShipment()">
           <i class="fas fa-plus mr-2"></i>
           Crear nuevo envío
         </button>
+        <button *ngIf="filter !== 'all'" class="clear-filter-btn" (click)="filter = 'all'">
+          <i class="fas fa-times mr-2"></i>
+          Ver todos los envíos
+        </button>
       </div>
 
       <div *ngIf="filteredShipments.length > 0" class="shipments-list">
-        <div *ngFor="let shipment of filteredShipments" 
-             class="shipment-card"
-             (click)="viewShipmentDetail(shipment.shipmentId)">
-          
+        <div *ngFor="let shipment of filteredShipments" class="shipment-card"
+          (click)="viewShipmentDetail(shipment.shipmentId)">
+
           <div class="shipment-header">
             <div>
               <h3 class="tracking-number">
@@ -176,6 +136,7 @@
               <p class="customer-name">{{ shipment.customerName }}</p>
             </div>
             <span class="status-badge" [class]="'status-' + getStatusColor(shipment.shipmentStatus)">
+              <i class="fas" [ngClass]="getStatusIcon(shipment.shipmentStatus)"></i>
               {{ getStatusText(shipment.shipmentStatus) }}
             </span>
           </div>
@@ -185,7 +146,7 @@
               <i class="fas fa-map-marker-alt detail-icon"></i>
               <span class="detail-text">{{ shipment.destination }}</span>
             </div>
-            
+
             <div class="detail-item">
               <i class="fas fa-calendar-alt detail-icon"></i>
               <span class="detail-text">
@@ -203,7 +164,82 @@
         </div>
       </div>
     </div>
+    <div class="stats-section">
+      <h2 class="section-title">Resumen de Envíos</h2>
+      <div class="stats-grid">
+        <div class="stat-card total">
+          <div class="stat-icon">
+            <i class="fas fa-box"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ stats.total }}</h3>
+            <p class="stat-label">Total</p>
+          </div>
+        </div>
 
+        <div class="stat-card habilitado">
+          <div class="stat-icon">
+            <i class="fas fa-play-circle"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ stats.habilitado }}</h3>
+            <p class="stat-label">Habilitado</p>
+          </div>
+        </div>
+
+        <div class="stat-card empaquetado">
+          <div class="stat-icon">
+            <i class="fas fa-box"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ stats.empaquetado }}</h3>
+            <p class="stat-label">Empaquetado</p>
+          </div>
+        </div>
+
+        <div class="stat-card entregado">
+          <div class="stat-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ stats.entregado }}</h3>
+            <p class="stat-label">Entregado</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-grid-second">
+        <div class="stat-card transito">
+          <div class="stat-icon">
+            <i class="fas fa-truck"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ stats.transito }}</h3>
+            <p class="stat-label">En Tránsito</p>
+          </div>
+        </div>
+
+        <div class="stat-card destino">
+          <div class="stat-icon">
+            <i class="fas fa-map-marker-alt"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ stats.destino }}</h3>
+            <p class="stat-label">Llegó a Destino</p>
+          </div>
+        </div>
+
+        <div class="stat-card devuelto">
+          <div class="stat-icon">
+            <i class="fas fa-undo"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ stats.devuelto }}</h3>
+            <p class="stat-label">Devuelto</p>
+          </div>
+        </div>
+      </div>
+    </div>
     <button class="floating-btn" (click)="createNewShipment()">
       <i class="fas fa-plus floating-icon"></i>
       <span class="floating-text">Nuevo Envío</span>

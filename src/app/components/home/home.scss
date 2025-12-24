@@ -691,3 +691,240 @@ $radius-xl: 1rem;
     }
   }
 }
+// Agregar estos estilos al archivo home.scss existente
+
+.stats-grid-second {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 16px;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Colores específicos para cada estado en estadísticas
+.stat-card {
+  &.habilitado {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    border-left: 4px solid #d97706;
+  }
+  
+  &.empaquetado {
+    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+    border-left: 4px solid #1d4ed8;
+  }
+  
+  &.transito {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    border-left: 4px solid #5b21b6;
+  }
+  
+  &.destino {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    border-left: 4px solid #0e7490;
+  }
+  
+  &.entregado {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-left: 4px solid #047857;
+  }
+  
+  &.devuelto {
+    background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+    border-left: 4px solid #dc2626;
+  }
+}
+
+// Estilos para botones de filtro por estado
+.filter-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+  
+  .filter-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: 2px solid #e5e7eb;
+    background: white;
+    color: #4b5563;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background: #f9fafb;
+      transform: translateY(-1px);
+    }
+    
+    &.active {
+      border-color: currentColor;
+      font-weight: 600;
+      
+      &.habilitado {
+        color: #d97706;
+        background: #fef3c7;
+      }
+      
+      &.empaquetado {
+        color: #1d4ed8;
+        background: #dbeafe;
+      }
+      
+      &.transito {
+        color: #5b21b6;
+        background: #ede9fe;
+      }
+      
+      &.destino {
+        color: #0e7490;
+        background: #cffafe;
+      }
+      
+      &.entregado {
+        color: #047857;
+        background: #d1fae5;
+      }
+      
+      &.devuelto {
+        color: #dc2626;
+        background: #fee2e2;
+      }
+    }
+    
+    i {
+      font-size: 14px;
+    }
+  }
+}
+
+.active-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  font-weight: 500;
+  
+  i {
+    color: #64748b;
+  }
+  
+  .clear-filter {
+    margin-left: auto;
+    background: #e2e8f0;
+    border: none;
+    color: #475569;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    
+    &:hover {
+      background: #cbd5e1;
+    }
+  }
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  
+  .refresh-btn {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    
+    &:hover:not(:disabled) {
+      background: #e2e8f0;
+    }
+    
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.empty-state {
+  .clear-filter-btn {
+    margin-top: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    &:hover {
+      background: #e2e8f0;
+    }
+  }
+}
+
+// Badges de estado con iconos
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  
+  i {
+    font-size: 11px;
+  }
+  
+  &.status-warning {
+    background: #fef3c7;
+    color: #92400e;
+  }
+  
+  &.status-info {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+  
+  &.status-primary {
+    background: #ede9fe;
+    color: #5b21b6;
+  }
+  
+  &.status-success {
+    background: #d1fae5;
+    color: #065f46;
+  }
+  
+  &.status-danger {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+}
