@@ -21,7 +21,7 @@ export class ShipmentsEdit implements OnInit {
   shipmentId: number | null = null;
   canEdit: boolean = false;
   currentUserId: number | null = null;
-    currentUserName: string | null = null; 
+  currentUserName: string | null = null;
   isLoggedIn: boolean = false;
 
   editForm: FormGroup;
@@ -50,7 +50,7 @@ export class ShipmentsEdit implements OnInit {
       }, 2000);
       return;
     }
-    this.currentUserName = this.authService.getUserName(); 
+    this.currentUserName = this.authService.getUserName();
 
     this.currentUserId = this.authService.getUserId();
 
@@ -72,7 +72,7 @@ export class ShipmentsEdit implements OnInit {
     });
   }
 
-   loadShipmentData(): void {
+  loadShipmentData(): void {
     if (!this.shipmentId) return;
 
     this.loadingData = true;
@@ -89,7 +89,7 @@ export class ShipmentsEdit implements OnInit {
           if (this.currentUserName && data.userName) {
             const shipmentUserName = data.userName.trim().toLowerCase();
             const currentUserName = this.currentUserName.trim().toLowerCase();
-            
+
             const isCreator = shipmentUserName === currentUserName;
             const isDelivered = data.shipmentStatusDescription === 'Entregado';
 
