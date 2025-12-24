@@ -6,6 +6,7 @@ import { ShipmentsCreate } from './components/shipments/shipments-create/shipmen
 import { ShipmentsList } from './components/shipments/shipments-list/shipments-list';
 import { ShipmentsDetail } from './components/shipments/shipments-detail/shipments-detail';
 import { ShipmentsEdit } from './components/shipments/shipments-edit/shipments-edit';
+import { TrackComponent } from './components/track/track';
 
 export const routes: Routes = [
     { path: '', component: Home }, 
@@ -15,5 +16,7 @@ export const routes: Routes = [
     { path: 'shipments/create', component: ShipmentsCreate },
     { path: 'shipments/list', component: ShipmentsList },
     { path: 'shipments/detail/:id', component: ShipmentsDetail},
-    { path: 'shipments/edit/:id', component: ShipmentsEdit}
+    { path: 'shipments/edit/:id', component: ShipmentsEdit},
+    { path: 'track', component: TrackComponent }, 
+
 ];

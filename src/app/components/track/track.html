@@ -1,0 +1,281 @@
+<div class="track-container">
+  <header class="track-header">
+    <button class="btn-back" (click)="goBack()">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <div class="header-content">
+      <h1 class="track-title">
+        <i class="fas fa-map-marker-alt"></i>
+        Rastrear Envío
+      </h1>
+      <p class="track-subtitle">Ingresa el número de tracking para ver el estado de tu envío</p>
+    </div>
+  </header>
+
+  <div class="search-section">
+    <div class="search-box">
+      <div class="search-input-wrapper">
+        <i class="fas fa-search search-icon"></i>
+        <input 
+          type="text" 
+          [(ngModel)]="trackingNumber"
+          placeholder="Ej: TRK-1234"
+          class="search-input"
+          (keyup.enter)="trackShipment()"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button 
+          *ngIf="trackingNumber" 
+          class="btn-clear"
+          (click)="clearSearch()"
+        >
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <button 
+        class="btn-track" 
+        (click)="trackShipment()"
+        [disabled]="!trackingNumber.trim() || loading"
+      >
+        <i class="fas fa-search" *ngIf="!loading"></i>
+        <i class="fas fa-spinner fa-spin" *ngIf="loading"></i>
+        {{ loading ? 'Buscando...' : 'Rastrear' }}
+      </button>
+    </div>
+
+    <div *ngIf="recentSearches.length > 0" class="recent-searches">
+      <h3 class="section-title">
+        <i class="fas fa-history"></i>
+        Búsquedas recientes
+      </h3>
+      <div class="search-chips">
+        <button 
+          *ngFor="let search of recentSearches"
+          class="search-chip"
+          (click)="useRecentSearch(search)"
+        >
+          <i class="fas fa-search"></i>
+          {{ search }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="results-section">
+    <div *ngIf="loading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Buscando envío "{{ trackingNumber }}"...</p>
+    </div>
+
+    <div *ngIf="error && !loading && searchAttempted" class="error-state">
+      <i class="fas fa-exclamation-triangle"></i>
+      <h3>No se encontró el envío</h3>
+      <p>{{ error }}</p>
+      <div class="error-actions">
+        <button class="btn-retry" (click)="clearSearch()">
+          <i class="fas fa-redo"></i>
+          Buscar otro
+        </button>
+        <button class="btn-help" routerLink="/shipments/create">
+          <i class="fas fa-question-circle"></i>
+          ¿No tienes tracking?
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="!shipment && !loading && recentShipments.length > 0 && !searchAttempted" class="recent-shipments">
+      <h3 class="section-title">
+        <i class="fas fa-shipping-fast"></i>
+        Tus envíos recientes
+      </h3>
+      <p class="section-subtitle">Haz clic en uno para ver su estado</p>
+      
+      <div class="shipments-list">
+        <div *ngFor="let recentShipment of recentShipments" 
+             class="recent-shipment-card"
+             (click)="useRecentSearch(recentShipment.trackingNumber)">
+          
+          <div class="recent-card-header">
+            <div>
+              <h4>{{ recentShipment.trackingNumber }}</h4>
+              <p class="recent-description">{{ recentShipment.description }}</p>
+            </div>
+            <span class="recent-status" [ngClass]="getStatusClass(recentShipment.shipmentStatusDescription)">
+              {{ getStatusText(recentShipment.shipmentStatusDescription) }}
+            </span>
+          </div>
+          
+          <div class="recent-card-footer">
+            <span class="recent-destination">
+              <i class="fas fa-map-marker-alt"></i>
+              {{ recentShipment.destination }}
+            </span>
+            <span class="recent-date">
+              <i class="fas fa-calendar-alt"></i>
+              {{ formatDate(recentShipment.shippedAt) }}
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="view-all-container">
+        <a routerLink="/shipments/list" class="btn-view-all">
+          <i class="fas fa-list"></i>
+          Ver todos mis envíos
+        </a>
+      </div>
+    </div>
+
+    <div *ngIf="shipment && !loading" class="shipment-found">
+      <div class="shipment-card">
+        <div class="shipment-header">
+          <div class="tracking-info">
+            <div class="tracking-label">Número de Tracking</div>
+            <div class="tracking-number">
+              <span>{{ shipment.trackingNumber }}</span>
+              <button class="btn-copy-tracking" (click)="copyTrackingNumber()" title="Copiar">
+                <i class="far fa-copy"></i>
+              </button>
+            </div>
+          </div>
+          
+          <div class="status-info">
+            <div class="status-label">Estado Actual</div>
+            <div class="status-badge" [ngClass]="getStatusClass(shipment.shipmentStatusDescription)">
+              <i class="fas" [ngClass]="{
+                'fa-check-circle': shipment.shipmentStatusDescription === 'Entregado',
+                'fa-truck': shipment.shipmentStatusDescription === 'Habilitado',
+                'fa-clock': shipment.shipmentStatusDescription === 'Pendiente'
+              }"></i>
+              {{ getStatusText(shipment.shipmentStatusDescription) }}
+            </div>
+          </div>
+        </div>
+
+        <div class="shipment-details">
+          <div class="detail-row">
+            <div class="detail-item">
+              <i class="fas fa-box"></i>
+              <div>
+                <label>Descripción</label>
+                <p>{{ shipment.description }}</p>
+              </div>
+            </div>
+            
+            <div class="detail-item">
+              <i class="fas fa-map-marker-alt"></i>
+              <div>
+                <label>Destino</label>
+                <p>{{ shipment.destination }}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="detail-row">
+            <div class="detail-item">
+              <i class="fas fa-user"></i>
+              <div>
+                <label>Cliente</label>
+                <p>{{ shipment.customerName }}</p>
+              </div>
+            </div>
+            
+            <div class="detail-item">
+              <i class="fas fa-user-tie"></i>
+              <div>
+                <label>Creado por</label>
+                <p>{{ shipment.userName }}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="detail-row">
+            <div class="detail-item">
+              <i class="fas fa-calendar-alt"></i>
+              <div>
+                <label>Fecha de envío</label>
+                <p>{{ formatDate(shipment.shippedAt) }}</p>
+              </div>
+            </div>
+            
+            <div class="detail-item" *ngIf="shipment.receivedAt">
+              <i class="fas fa-check-circle"></i>
+              <div>
+                <label>Fecha de entrega</label>
+                <p>{{ formatDate(shipment.receivedAt) }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="shipment-actions">
+          <a [routerLink]="['/shipments/detail', shipment.shipmentId]" class="btn-details">
+            <i class="fas fa-eye"></i>
+            Ver detalles completos
+          </a>
+        </div>
+      </div>
+
+      <div class="timeline-section">
+        <h3 class="timeline-title">
+          <i class="fas fa-route"></i>
+          Historial de seguimiento
+        </h3>
+        <div class="timeline">
+          <div class="timeline-item completed">
+            <div class="timeline-marker"></div>
+            <div class="timeline-content">
+              <strong>Registrado</strong>
+              <small>{{ formatDate(shipment.shippedAt) }}</small>
+              <p class="timeline-description">Envío registrado en el sistema</p>
+            </div>
+          </div>
+          
+          <div class="timeline-item" [ngClass]="{'current': shipment.shipmentStatusDescription === 'Habilitado'}">
+            <div class="timeline-marker"></div>
+            <div class="timeline-content">
+              <strong>En tránsito</strong>
+              <small *ngIf="shipment.shipmentStatusDescription === 'Habilitado'">En progreso</small>
+              <small *ngIf="shipment.shipmentStatusDescription === 'Entregado'">Completado</small>
+              <p class="timeline-description">En camino al destino</p>
+            </div>
+          </div>
+          
+          <div class="timeline-item" [ngClass]="{
+            'completed': shipment.shipmentStatusDescription === 'Entregado',
+            'current': shipment.shipmentStatusDescription === 'Entregado'
+          }">
+            <div class="timeline-marker"></div>
+            <div class="timeline-content">
+              <strong>Entregado</strong>
+              <small *ngIf="shipment.receivedAt">{{ formatDate(shipment.receivedAt) }}</small>
+              <small *ngIf="!shipment.receivedAt">Pendiente</small>
+              <p *ngIf="shipment.receivedBy" class="timeline-description">
+                Recibido por: {{ shipment.receivedBy }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="!searchAttempted && recentShipments.length === 0 && !shipment && !loading" class="empty-state">
+      <div class="empty-icon">
+        <i class="fas fa-search-location"></i>
+      </div>
+      <h3>Rastrea cualquier envío</h3>
+      <p>Ingresa el número de tracking arriba para comenzar</p>
+      <div class="empty-tips">
+        <div class="tip">
+          <i class="fas fa-bullhorn"></i>
+          <p>Encuentra el número de tracking en tu email de confirmación</p>
+        </div>
+        <div class="tip">
+          <i class="fas fa-history"></i>
+          <p>Las búsquedas recientes aparecerán aquí</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
