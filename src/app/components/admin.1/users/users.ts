@@ -25,8 +25,6 @@ export class UsersComponent implements OnInit {
   showDeleteModal: boolean = false;
 
   selectedUser: User | null = null;
-    currentUserPassword: string = '';
-
 
   roles = [
     { value: 'User', label: 'Usuario' },
@@ -142,10 +140,8 @@ export class UsersComponent implements OnInit {
     return this.filteredUsers.slice(startIndex, endIndex);
   }
 
-   openEditModal(user: User): void {
+  openEditModal(user: User): void {
     this.selectedUser = user;
-    
-    this.currentUserPassword = user.passwordHash;
     
     this.editForm.patchValue({
       name: user.name,
@@ -215,16 +211,14 @@ export class UsersComponent implements OnInit {
 
     try {
       const formValue = this.editForm.value;
-    
+      
       const updatedUser: UpdateUser = {
-        passwordHash: this.currentUserPassword, 
+        passwordHash: '', 
         name: formValue.name,
         email: formValue.email,
         isActive: formValue.isActive,
         role: formValue.role
       };
-
-      console.log('Actualizando usuario con contraseña actual:', updatedUser);
 
       const userId = Number(this.selectedUser.userId);
       await this.userService.updateUser(userId, updatedUser).toPromise();
@@ -232,7 +226,6 @@ export class UsersComponent implements OnInit {
       this.successMessage = 'Usuario actualizado exitosamente';
       this.showEditModal = false;
       this.selectedUser = null;
-      this.currentUserPassword = '';
 
       setTimeout(() => {
         this.loadUsers();
@@ -242,15 +235,14 @@ export class UsersComponent implements OnInit {
     } catch (error: any) {
       console.error('Error updating user:', error);
       
-      if (error.status === 400) {
-        this.errorMessage = error.error?.message || 'Error de validación';
-      } else if (error.status === 500) {
-        this.errorMessage = 'Error interno del servidor. La contraseña no se mantuvo.';
+      if (error.status === 400 && error.error?.message?.includes('password')) {
+        this.errorMessage = 'Error de validación. Contacta al administrador.';
       } else {
         this.errorMessage = error.error?.message || 'Error al actualizar el usuario';
       }
     }
   }
+
   async deleteUser(): Promise<void> {
     if (!this.selectedUser) return;
 
@@ -455,7 +447,7 @@ export class UsersComponent implements OnInit {
 
     if (confirm(confirmMessage)) {
       const updatedUser: UpdateUser = {
-        passwordHash: user.passwordHash, 
+        passwordHash: '', // String vacío para mantener la contraseña actual
         name: user.name,
         email: user.email,
         isActive: !user.isActive,
