@@ -1,0 +1,535 @@
+<div class="customers-container">
+  <div class="admin-header">
+    <div class="header-content">
+      <div class="header-left">
+        <h1 class="page-title">
+          <i class="fas fa-user-tie mr-2"></i>
+          Gestión de Clientes
+        </h1>
+        <p class="page-subtitle">
+          Administra todos los clientes del sistema
+        </p>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-refresh" (click)="onRefresh()" [disabled]="loading">
+          <i class="fas fa-sync-alt" [class.fa-spin]="loading"></i>
+          {{ loading ? 'Actualizando...' : 'Actualizar' }}
+        </button>
+        <button class="btn btn-primary" (click)="openCreateModal()">
+          <i class="fas fa-plus mr-2"></i>
+          Nuevo Cliente
+        </button>
+        <button class="btn btn-secondary" routerLink="/">
+          <i class="fas fa-arrow-left mr-2"></i>
+          Volver al Dashboard
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-toolbar">
+    <div class="search-container">
+      <i class="fas fa-search search-icon"></i>
+      <input type="text" class="search-input" placeholder="Buscar por nombre, email, teléfono o documento..."
+        [(ngModel)]="searchTerm" (input)="filterCustomers()">
+    </div>
+
+    <div class="stats-container">
+      <div class="stat-item">
+        <span class="stat-label">Total Clientes:</span>
+        <span class="stat-value">{{ customers.length }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Regular:</span>
+        <span class="stat-value">{{ regularCustomersCount }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">VIP:</span>
+        <span class="stat-value">{{ vipCustomersCount }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Gold:</span>
+        <span class="stat-value">{{ goldCustomersCount }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Platinium:</span>
+        <span class="stat-value">{{ platiniumCustomersCount }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="successMessage" class="alert alert-success">
+    <i class="fas fa-check-circle mr-2"></i>
+    {{ successMessage }}
+  </div>
+
+  <div *ngIf="errorMessage" class="alert alert-error">
+    <i class="fas fa-exclamation-circle mr-2"></i>
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="loading && !refreshing" class="loading-container">
+    <div class="spinner"></div>
+    <p>Cargando clientes...</p>
+  </div>
+
+  <div *ngIf="!loading && filteredCustomers.length === 0" class="empty-state">
+    <div class="empty-icon">
+      <i class="fas fa-user-tie"></i>
+    </div>
+    <h3>No hay clientes registrados</h3>
+    <p *ngIf="searchTerm">
+      No se encontraron clientes con la búsqueda "{{ searchTerm }}"
+    </p>
+    <p *ngIf="!searchTerm">
+      Comienza agregando tu primer cliente
+    </p>
+    <div class="empty-actions">
+      <button class="btn btn-primary" (click)="openCreateModal()">
+        <i class="fas fa-plus mr-2"></i>
+        Crear primer cliente
+      </button>
+      <button class="btn btn-refresh" (click)="onRefresh()" [disabled]="loading">
+        <i class="fas fa-sync-alt mr-2"></i>
+        Reintentar
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="!loading && filteredCustomers.length > 0" class="table-container">
+    <div class="table-header">
+      <div class="table-info">
+        <span class="table-count">
+          <i class="fas fa-users mr-1"></i>
+          {{ filteredCustomers.length }} cliente{{ filteredCustomers.length !== 1 ? 's' : '' }} encontrado{{
+          filteredCustomers.length !== 1 ? 's' : '' }}
+        </span>
+        <span class="table-search-info" *ngIf="searchTerm">
+          <i class="fas fa-search mr-1"></i>
+          Búsqueda: "{{ searchTerm }}"
+        </span>
+      </div>
+      <div class="table-actions">
+        <button class="btn btn-refresh-sm" (click)="onRefresh()" [disabled]="loading" title="Actualizar lista">
+          <i class="fas fa-sync-alt" [class.fa-spin]="loading"></i>
+        </button>
+        <button class="btn btn-export" (click)="exportToCSV()" title="Exportar a CSV">
+          <i class="fas fa-file-export"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>
+              <button class="sort-btn" (click)="toggleSort('customerId')">
+                ID
+                <i class="fas" [class.fa-sort]="sortField !== 'customerId'"
+                  [class.fa-sort-up]="sortField === 'customerId' && sortDirection === 'asc'"
+                  [class.fa-sort-down]="sortField === 'customerId' && sortDirection === 'desc'"></i>
+              </button>
+            </th>
+            <th>
+              <button class="sort-btn" (click)="toggleSort('name')">
+                Nombre
+                <i class="fas" [class.fa-sort]="sortField !== 'name'"
+                  [class.fa-sort-up]="sortField === 'name' && sortDirection === 'asc'"
+                  [class.fa-sort-down]="sortField === 'name' && sortDirection === 'desc'"></i>
+              </button>
+            </th>
+            <th>Documento</th>
+            <th>Email</th>
+            <th>Teléfono</th>
+            <th>Tipo</th>
+            <th class="text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let customer of paginatedCustomers">
+            <td class="font-mono">#{{ customer.customerId }}</td>
+            <td>
+              <div class="customer-info">
+                <strong>{{ customer.name }}</strong>
+              </div>
+            </td>
+            <td>
+              <div class="doc-number">
+                <i class="fas fa-id-card mr-1"></i>
+                {{ customer.docmNumber }}
+              </div>
+            </td>
+            <td>
+              <div class="email-cell">
+                <i class="fas fa-envelope mr-1"></i>
+                {{ customer.email }}
+              </div>
+            </td>
+            <td>
+              <div class="phone-cell">
+                <i class="fas fa-phone mr-1"></i>
+                {{ customer.phone }}
+              </div>
+            </td>
+            <td>
+              <span class="type-badge" [class]="'type-' + customer.customerTypeId">
+                {{ customer.customerTypeDescription || getCustomerTypeDescription(customer.customerTypeId) }}
+              </span>
+            </td>
+            <td class="actions-cell">
+              <div class="actions-buttons">
+                <button class="btn-action btn-edit" (click)="openEditModal(customer)" title="Editar">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn-action btn-delete" (click)="openDeleteModal(customer)" title="Eliminar">
+                  <i class="fas fa-trash"></i>
+                </button>
+                <button class="btn-action btn-view" (click)="viewCustomerDetails(customer)" title="Ver detalles">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="totalPages > 1" class="pagination-container">
+      <div class="pagination-info">
+        Mostrando {{ paginationRange }}
+        de {{ filteredCustomers.length }} clientes
+        <span *ngIf="searchTerm" class="search-info">
+          (Filtrado de {{ customers.length }} total)
+        </span>
+      </div>
+      <div class="pagination-controls">
+        <div class="page-size-selector">
+          <label for="pageSize" class="page-size-label">
+            <i class="fas fa-list mr-1"></i>
+            Mostrar:
+          </label>
+          <select id="pageSize" class="page-size-select" [(ngModel)]="itemsPerPage" (change)="onPageSizeChange()">
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+          </select>
+        </div>
+
+        <div class="pagination-buttons">
+          <button class="pagination-btn" [disabled]="currentPage === 1" (click)="previousPage()"
+            title="Página anterior">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+
+          <div class="page-numbers">
+            <button *ngFor="let page of getPageNumbers()" class="page-number" [class.active]="currentPage === page"
+              [class.dots]="page === '...'" (click)="page !== '...' && goToPage(page)" [disabled]="page === '...'">
+              {{ page }}
+            </button>
+          </div>
+
+          <button class="pagination-btn" [disabled]="currentPage === totalPages" (click)="nextPage()"
+            title="Página siguiente">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+
+        <div class="page-jump">
+          <input type="number" class="page-jump-input" [min]="1" [max]="totalPages" [(ngModel)]="jumpPage"
+            placeholder="Ir a" (keyup.enter)="jumpToPage()">
+          <button class="page-jump-btn" (click)="jumpToPage()" title="Ir a página">
+            <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="showCreateModal" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <i class="fas fa-user-plus mr-2"></i>
+          Nuevo Cliente
+        </h3>
+        <button class="modal-close" (click)="closeModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form [formGroup]="createForm" (ngSubmit)="createCustomer()">
+          <div class="form-group">
+            <label for="createName" class="form-label">
+              <i class="fas fa-user mr-1"></i>
+              Nombre Completo *
+            </label>
+            <input id="createName" type="text" class="form-control" formControlName="name" placeholder="Ej: Juan Pérez"
+              [class.is-invalid]="createForm.get('name')?.invalid && createForm.get('name')?.touched">
+            <div *ngIf="createForm.get('name')?.invalid && createForm.get('name')?.touched" class="invalid-feedback">
+              <span *ngIf="createForm.get('name')?.errors?.['required']">
+                El nombre es requerido
+              </span>
+              <span *ngIf="createForm.get('name')?.errors?.['minlength']">
+                Mínimo 3 caracteres
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="createDocNumber" class="form-label">
+              <i class="fas fa-id-card mr-1"></i>
+              Número de Documento *
+            </label>
+            <input id="createDocNumber" type="text" class="form-control" formControlName="docmNumber"
+              placeholder="Ej: 12345678"
+              [class.is-invalid]="createForm.get('docmNumber')?.invalid && createForm.get('docmNumber')?.touched">
+            <div *ngIf="createForm.get('docmNumber')?.invalid && createForm.get('docmNumber')?.touched"
+              class="invalid-feedback">
+              <span *ngIf="createForm.get('docmNumber')?.errors?.['required']">
+                El documento es requerido
+              </span>
+              <span *ngIf="createForm.get('docmNumber')?.errors?.['pattern']">
+                8-12 dígitos numéricos
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="createEmail" class="form-label">
+              <i class="fas fa-envelope mr-1"></i>
+              Email *
+            </label>
+            <input id="createEmail" type="email" class="form-control" formControlName="email"
+              placeholder="Ej: cliente@email.com"
+              [class.is-invalid]="createForm.get('email')?.invalid && createForm.get('email')?.touched">
+            <div *ngIf="createForm.get('email')?.invalid && createForm.get('email')?.touched" class="invalid-feedback">
+              <span *ngIf="createForm.get('email')?.errors?.['required']">
+                El email es requerido
+              </span>
+              <span *ngIf="createForm.get('email')?.errors?.['email']">
+                Email inválido
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="createPhone" class="form-label">
+              <i class="fas fa-phone mr-1"></i>
+              Teléfono *
+            </label>
+            <input id="createPhone" type="tel" class="form-control" formControlName="phone" placeholder="Ej: 999888777"
+              [class.is-invalid]="createForm.get('phone')?.invalid && createForm.get('phone')?.touched">
+            <div *ngIf="createForm.get('phone')?.invalid && createForm.get('phone')?.touched" class="invalid-feedback">
+              <span *ngIf="createForm.get('phone')?.errors?.['required']">
+                El teléfono es requerido
+              </span>
+              <span *ngIf="createForm.get('phone')?.errors?.['pattern']">
+                9-15 dígitos numéricos
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="createCustomerType" class="form-label">
+              <i class="fas fa-tag mr-1"></i>
+              Tipo de Cliente *
+            </label>
+            <select id="createCustomerType" class="form-control" formControlName="customerTypeId"
+              [class.is-invalid]="createForm.get('customerTypeId')?.invalid && createForm.get('customerTypeId')?.touched">
+              <option value="1">Regular</option>
+              <option value="2">VIP</option>
+              <option value="3">Gold</option>
+              <option value="4">Platinium</option>
+            </select>
+            <div *ngIf="createForm.get('customerTypeId')?.invalid && createForm.get('customerTypeId')?.touched"
+              class="invalid-feedback">
+              <span *ngIf="createForm.get('customerTypeId')?.errors?.['required']">
+                El tipo de cliente es requerido
+              </span>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeModal()">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary" [disabled]="createForm.invalid || loading">
+              <i class="fas fa-save mr-2"></i>
+              {{ loading ? 'Guardando...' : 'Guardar Cliente' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="showEditModal" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <i class="fas fa-edit mr-2"></i>
+          Editar Cliente
+        </h3>
+        <button class="modal-close" (click)="closeModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form [formGroup]="editForm" (ngSubmit)="updateCustomer()">
+          <div class="form-group">
+            <label class="form-label">
+              <i class="fas fa-user mr-1"></i>
+              Nombre Completo *
+            </label>
+            <input type="text" class="form-control" formControlName="name"
+              [class.is-invalid]="editForm.get('name')?.invalid && editForm.get('name')?.touched">
+            <div *ngIf="editForm.get('name')?.invalid && editForm.get('name')?.touched" class="invalid-feedback">
+              <span *ngIf="editForm.get('name')?.errors?.['required']">
+                El nombre es requerido
+              </span>
+              <span *ngIf="editForm.get('name')?.errors?.['minlength']">
+                Mínimo 3 caracteres
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <i class="fas fa-id-card mr-1"></i>
+              Número de Documento *
+            </label>
+            <input type="text" class="form-control" formControlName="docmNumber"
+              [class.is-invalid]="editForm.get('docmNumber')?.invalid && editForm.get('docmNumber')?.touched">
+            <div *ngIf="editForm.get('docmNumber')?.invalid && editForm.get('docmNumber')?.touched"
+              class="invalid-feedback">
+              <span *ngIf="editForm.get('docmNumber')?.errors?.['required']">
+                El documento es requerido
+              </span>
+              <span *ngIf="editForm.get('docmNumber')?.errors?.['pattern']">
+                8-12 dígitos numéricos
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <i class="fas fa-envelope mr-1"></i>
+              Email *
+            </label>
+            <input type="email" class="form-control" formControlName="email"
+              [class.is-invalid]="editForm.get('email')?.invalid && editForm.get('email')?.touched">
+            <div *ngIf="editForm.get('email')?.invalid && editForm.get('email')?.touched" class="invalid-feedback">
+              <span *ngIf="editForm.get('email')?.errors?.['required']">
+                El email es requerido
+              </span>
+              <span *ngIf="editForm.get('email')?.errors?.['email']">
+                Email inválido
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <i class="fas fa-phone mr-1"></i>
+              Teléfono *
+            </label>
+            <input type="tel" class="form-control" formControlName="phone"
+              [class.is-invalid]="editForm.get('phone')?.invalid && editForm.get('phone')?.touched">
+            <div *ngIf="editForm.get('phone')?.invalid && editForm.get('phone')?.touched" class="invalid-feedback">
+              <span *ngIf="editForm.get('phone')?.errors?.['required']">
+                El teléfono es requerido
+              </span>
+              <span *ngIf="editForm.get('phone')?.errors?.['pattern']">
+                9-15 dígitos numéricos
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <i class="fas fa-tag mr-1"></i>
+              Tipo de Cliente *
+            </label>
+            <select class="form-control" formControlName="customerTypeId"
+              [class.is-invalid]="editForm.get('customerTypeId')?.invalid && editForm.get('customerTypeId')?.touched">
+              <option value="1">Regular</option>
+              <option value="2">VIP</option>
+              <option value="3">Gold</option>
+              <option value="4">Platinium</option>
+            </select>
+            <div *ngIf="editForm.get('customerTypeId')?.invalid && editForm.get('customerTypeId')?.touched"
+              class="invalid-feedback">
+              <span *ngIf="editForm.get('customerTypeId')?.errors?.['required']">
+                El tipo de cliente es requerido
+              </span>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeModal()">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary" [disabled]="editForm.invalid || loading">
+              <i class="fas fa-save mr-2"></i>
+              {{ loading ? 'Actualizando...' : 'Actualizar Cliente' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="showDeleteModal" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title text-danger">
+          <i class="fas fa-exclamation-triangle mr-2"></i>
+          Confirmar Eliminación
+        </h3>
+        <button class="modal-close" (click)="closeModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="delete-warning">
+          <div class="warning-icon">
+            <i class="fas fa-trash-alt"></i>
+          </div>
+          <h4>¿Estás seguro de eliminar este cliente?</h4>
+          <p class="text-muted">
+            Esta acción no se puede deshacer. Se eliminará permanentemente el cliente:
+          </p>
+          <div class="delete-info" *ngIf="selectedCustomer">
+            <div class="info-item">
+              <strong>Nombre:</strong> {{ selectedCustomer.name }}
+            </div>
+            <div class="info-item">
+              <strong>Documento:</strong> {{ selectedCustomer.docmNumber }}
+            </div>
+            <div class="info-item">
+              <strong>Email:</strong> {{ selectedCustomer.email }}
+            </div>
+            <div class="info-item">
+              <strong>Teléfono:</strong> {{ selectedCustomer.phone }}
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeModal()">
+            Cancelar
+          </button>
+          <button type="button" class="btn btn-danger" (click)="deleteCustomer()" [disabled]="loading">
+            <i class="fas fa-trash mr-2"></i>
+            {{ loading ? 'Eliminando...' : 'Eliminar Permanentemente' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

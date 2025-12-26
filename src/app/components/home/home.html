@@ -1,14 +1,19 @@
 <div class="home-container">
   <div *ngIf="loading" class="loading-state">
     <div class="spinner"></div>
-    <p>Cargando tus envíos...</p>
+    <p>Cargando datos...</p>
   </div>
 
   <div *ngIf="!loading" class="home-content">
     <header class="home-header">
       <div>
         <h1 class="greeting">{{ getGreeting() }}, {{ getShortName() }}!</h1>
-        <p class="subtitle">Rastrea tus envíos fácilmente con nosotros</p>
+        <p class="subtitle" *ngIf="isAdmin || isSuperAdmin">
+          Panel de Administración - Gestión Completa
+        </p>
+        <p class="subtitle" *ngIf="!(isAdmin || isSuperAdmin)">
+          Rastrea tus envíos fácilmente con nosotros
+        </p>
       </div>
 
       <div class="user-menu">
@@ -21,7 +26,13 @@
         </button>
 
         <div *ngIf="showUserMenu" class="dropdown-menu">
-
+          <div class="user-info-dropdown">
+            <strong>{{ userData?.name || 'Usuario' }}</strong>
+            <small>{{ userData?.email || '' }}</small>
+            <div class="user-role-badge" [class]="isSuperAdmin ? 'super-admin' : isAdmin ? 'admin' : 'user'">
+              {{ isSuperAdmin ? 'SUPER_ADMIN' : isAdmin ? 'ADMIN' : 'USER' }}
+            </div>
+          </div>
           
           <button class="dropdown-item logout" (click)="logout()">
             <i class="fas fa-sign-out-alt"></i>
@@ -30,7 +41,116 @@
         </div>
       </div>
     </header>
-    <div class="quick-actions">
+
+    <div *ngIf="isAdmin || isSuperAdmin" class="admin-quick-actions">
+      <h2 class="section-title">Acciones de Admin</h2>
+      <div class="admin-actions-grid">
+        <button class="admin-action-btn" (click)="goToUsers()">
+          <div class="admin-action-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="admin-action-content">
+            <h3>Gestión de Usuarios</h3>
+            <p>Ver, crear y editar usuarios</p>
+            <span class="admin-action-count">{{ adminStats.totalUsers }} usuarios</span>
+          </div>
+          <i class="fas fa-arrow-right admin-action-arrow"></i>
+        </button>
+
+        <button class="admin-action-btn" (click)="goToCustomers()">
+          <div class="admin-action-icon">
+            <i class="fas fa-user-tie"></i>
+          </div>
+          <div class="admin-action-content">
+            <h3>Gestión de Clientes</h3>
+            <p>Administrar clientes del sistema</p>
+            <span class="admin-action-count">{{ adminStats.totalCustomers }} clientes</span>
+          </div>
+          <i class="fas fa-arrow-right admin-action-arrow"></i>
+        </button>
+
+        <button class="admin-action-btn" (click)="goToAllShipments()">
+          <div class="admin-action-icon">
+            <i class="fas fa-boxes"></i>
+          </div>
+          <div class="admin-action-content">
+            <h3>Todos los Envíos</h3>
+            <p>Ver y gestionar todos los envíos</p>
+            <span class="admin-action-count">{{ adminStats.totalShipments }} envíos</span>
+          </div>
+          <i class="fas fa-arrow-right admin-action-arrow"></i>
+        </button>
+
+        <button class="admin-action-btn" (click)="goToShipmentStatusChange()">
+          <div class="admin-action-icon">
+            <i class="fas fa-exchange-alt"></i>
+          </div>
+          <div class="admin-action-content">
+            <h3>Cambiar Estado</h3>
+            <p>Actualizar estado de envíos</p>
+            <span class="admin-action-count">Gestionar estados</span>
+          </div>
+          <i class="fas fa-arrow-right admin-action-arrow"></i>
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="isAdmin || isSuperAdmin" class="admin-stats-section">
+      <h2 class="section-title">Estadísticas del Sistema</h2>
+      <div class="admin-stats-grid">
+        <div class="admin-stat-card">
+          <div class="admin-stat-icon total">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="admin-stat-content">
+            <h3 class="admin-stat-value">{{ adminStats.totalUsers }}</h3>
+            <p class="admin-stat-label">Usuarios Registrados</p>
+          </div>
+        </div>
+
+        <div class="admin-stat-card">
+          <div class="admin-stat-icon customers">
+            <i class="fas fa-user-tie"></i>
+          </div>
+          <div class="admin-stat-content">
+            <h3 class="admin-stat-value">{{ adminStats.totalCustomers }}</h3>
+            <p class="admin-stat-label">Clientes</p>
+          </div>
+        </div>
+
+        <div class="admin-stat-card">
+          <div class="admin-stat-icon shipments">
+            <i class="fas fa-box"></i>
+          </div>
+          <div class="admin-stat-content">
+            <h3 class="admin-stat-value">{{ adminStats.totalShipments }}</h3>
+            <p class="admin-stat-label">Total Envíos</p>
+          </div>
+        </div>
+
+        <div class="admin-stat-card">
+          <div class="admin-stat-icon today">
+            <i class="fas fa-calendar-day"></i>
+          </div>
+          <div class="admin-stat-content">
+            <h3 class="admin-stat-value">{{ adminStats.shipmentsToday }}</h3>
+            <p class="admin-stat-label">Envíos Hoy</p>
+          </div>
+        </div>
+
+        <div class="admin-stat-card">
+          <div class="admin-stat-icon week">
+            <i class="fas fa-calendar-week"></i>
+          </div>
+          <div class="admin-stat-content">
+            <h3 class="admin-stat-value">{{ adminStats.shipmentsThisWeek }}</h3>
+            <p class="admin-stat-label">Envíos Esta Semana</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="!(isAdmin || isSuperAdmin)" class="quick-actions">
       <div class="actions-grid">
         <button class="action-btn primary" (click)="createNewShipment()">
           <i class="fas fa-plus action-icon"></i>
@@ -48,6 +168,7 @@
         </button>
       </div>
     </div>
+
     <div class="filters-section">
       <h3 class="section-title">Filtrar por Estado</h3>
       <div class="filter-buttons">
@@ -96,16 +217,16 @@
       </div>
     </div>
 
-
     <div class="recent-shipments">
       <div class="section-header">
-        <h2 class="section-title">Envíos Recientes</h2>
+        <h2 class="section-title">Envíos {{ isAdmin || isSuperAdmin ? 'del Sistema' : 'Recientes' }}</h2>
         <div class="header-actions">
           <button class="refresh-btn" (click)="onRefresh()" [disabled]="refreshing">
             <i class="fas fa-sync-alt" [class.fa-spin]="refreshing"></i>
             {{ refreshing ? 'Actualizando...' : 'Actualizar' }}
           </button>
-          <button *ngIf="shipments.length > 0" class="see-all-btn" (click)="viewAllShipments()">
+          <button *ngIf="shipments.length > 0" class="see-all-btn" 
+                  (click)="isAdmin || isSuperAdmin ? goToAllShipments() : viewAllShipments()">
             Ver todos <i class="fas fa-arrow-right ml-1"></i>
           </button>
         </div>
@@ -136,6 +257,9 @@
                 #{{ shipment.trackingNumber }}
               </h3>
               <p class="customer-name">{{ shipment.customerName }}</p>
+              <p *ngIf="(isAdmin || isSuperAdmin) && shipment.userName" class="user-assigned">
+                <i class="fas fa-user"></i> {{ shipment.userName }}
+              </p>
             </div>
             <span class="status-badge" [class]="'status-' + getStatusColor(shipment.shipmentStatus)">
               <i class="fas" [ngClass]="getStatusIcon(shipment.shipmentStatus)"></i>
@@ -166,8 +290,9 @@
         </div>
       </div>
     </div>
+
     <div class="stats-section">
-      <h2 class="section-title">Resumen de Envíos</h2>
+      <h2 class="section-title">Resumen de Envíos {{ isAdmin || isSuperAdmin ? 'del Sistema' : '' }}</h2>
       <div class="stats-grid">
         <div class="stat-card total">
           <div class="stat-icon">
@@ -242,9 +367,12 @@
         </div>
       </div>
     </div>
-    <button class="floating-btn" (click)="createNewShipment()">
-      <i class="fas fa-plus floating-icon"></i>
-      <span class="floating-text">Nuevo Envío</span>
+
+    <button class="floating-btn" (click)="isAdmin || isSuperAdmin ? goToAllShipments() : createNewShipment()">
+      <i class="fas" [class]="isAdmin || isSuperAdmin ? 'fa-boxes' : 'fa-plus'"></i>
+      <span class="floating-text">
+        {{ isAdmin || isSuperAdmin ? 'Ver Todos' : 'Nuevo Envío' }}
+      </span>
     </button>
   </div>
 </div>

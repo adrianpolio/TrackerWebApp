@@ -5,6 +5,10 @@ import { Router, RouterModule } from '@angular/router';
 import { ShipmentService } from '../../services/shipment.service';
 import { AuthService } from '../../services/auth.service';
 import { Shipment } from '../../models/shipment.model';
+import { UserService } from '../../services/user.service'; 
+import { CustomerService } from '../../services/customer.service';
+import { User } from '../../models/user.model'; 
+import { Customer } from '../../models/customer.model';
 
 @Component({
   selector: 'app-home',
@@ -16,6 +20,8 @@ import { Shipment } from '../../models/shipment.model';
 export class Home implements OnInit {
   userData: any = null;
   shipments: Shipment[] = [];
+  users: User[] = []; 
+  customers: Customer[] = []; 
   loading: boolean = true;
   refreshing: boolean = false;
   searchQuery: string = '';
@@ -23,6 +29,17 @@ export class Home implements OnInit {
   
   showUserMenu = false;
   userInitial: string = 'U';
+
+  isAdmin: boolean = false;
+  isSuperAdmin: boolean = false;
+
+   adminStats = {
+    totalUsers: 0,
+    totalCustomers: 0,
+    totalShipments: 0,
+    shipmentsToday: 0,
+    shipmentsThisWeek: 0
+  };
 
   stats = {
     total: 0,
@@ -46,17 +63,14 @@ export class Home implements OnInit {
   constructor(
     private shipmentService: ShipmentService,
     private authService: AuthService,
+    private userService: UserService, 
+    private customerService: CustomerService, 
     private router: Router
   ) { }
 
-  ngOnInit(): void {
+   ngOnInit(): void {
     this.loadUserData();
-    
     document.addEventListener('click', this.handleClickOutside.bind(this));
-  }
-
-  ngOnDestroy(): void {
-    document.removeEventListener('click', this.handleClickOutside.bind(this));
   }
 
   async loadUserData(): Promise<void> {
@@ -68,9 +82,21 @@ export class Home implements OnInit {
         return;
       }
 
+      this.isAdmin = this.userData.role === 'ADMIN' || this.userData.role === 'Admin';
+      this.isSuperAdmin = this.userData.role === 'SUPER_ADMIN' || this.userData.role === 'SuperAdmin';
+      
       this.userInitial = this.getUserInitial();
       
-      await this.loadShipments();
+      if (this.isAdmin || this.isSuperAdmin) {
+        await Promise.all([
+          this.loadAllShipments(),
+          this.loadAllUsers(),
+          this.loadAllCustomers()
+        ]);
+        this.calculateAdminStats();
+      } else {
+        await this.loadUserShipments();
+      }
 
       this.loading = false;
       this.refreshing = false;
@@ -81,10 +107,37 @@ export class Home implements OnInit {
     }
   }
 
-  async loadShipments(): Promise<void> {
+  async loadAllShipments(): Promise<void> {
+    try {
+      this.shipments = await this.shipmentService.getAllShipments().toPromise() as Shipment[] || [];
+    } catch (error) {
+      console.error('Error loading all shipments:', error);
+      this.shipments = [];
+    }
+  }
+
+  async loadAllUsers(): Promise<void> {
+    try {
+      this.users = await this.userService.getAllUsers().toPromise() as User[] || [];
+    } catch (error) {
+      console.error('Error loading users:', error);
+      this.users = [];
+    }
+  }
+
+  async loadAllCustomers(): Promise<void> {
+    try {
+      this.customers = await this.customerService.getAllCustomers().toPromise() as Customer[] || [];
+    } catch (error) {
+      console.error('Error loading customers:', error);
+      this.customers = [];
+    }
+  }
+
+ async loadUserShipments(): Promise<void> {
     try {
       const allShipments = await this.shipmentService.getAllShipments().toPromise() as Shipment[];
-
+      
       if (!allShipments) {
         this.shipments = [];
       } else {
@@ -103,11 +156,73 @@ export class Home implements OnInit {
       }
 
       this.calculateStats();
-
     } catch (error) {
       console.error('Error loading shipments:', error);
       this.shipments = [];
     }
+  }
+  calculateAdminStats(): void {
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+    
+    const shipmentsToday = this.shipments.filter(shipment => {
+      const shippedDate = new Date(shipment.shippedAt);
+      return shippedDate.toDateString() === today.toDateString();
+    });
+
+    const shipmentsThisWeek = this.shipments.filter(shipment => {
+      const shippedDate = new Date(shipment.shippedAt);
+      return shippedDate >= startOfWeek;
+    });
+
+    this.adminStats = {
+      totalUsers: this.users.length,
+      totalCustomers: this.customers.length,
+      totalShipments: this.shipments.length,
+      shipmentsToday: shipmentsToday.length,
+      shipmentsThisWeek: shipmentsThisWeek.length
+    };
+
+    this.calculateStats();
+  }
+
+  getGreeting(): string {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Buenos días';
+    if (hour < 19) return 'Buenas tardes';
+    return 'Buenas noches';
+  }
+
+getShortName(): string {
+  if (this.isAdmin || this.isSuperAdmin) {
+    if (this.userData?.role === 'SUPER_ADMIN' || this.userData?.role === 'SuperAdmin') {
+      return 'Super Admin';
+    } else if (this.userData?.role === 'ADMIN' || this.userData?.role === 'Admin') {
+      return 'Admin';
+    }
+    return this.isSuperAdmin ? 'Super Admin' : 'Admin';
+  }
+  
+  if (!this.userData?.name) return 'Usuario';
+  const name = this.userData.name;
+  return name.split(' ')[0];
+}
+
+  goToUsers(): void {
+    this.router.navigate(['/admin/users']);
+  }
+
+  goToCustomers(): void {
+    this.router.navigate(['/admin/customers']);
+  }
+
+  goToAllShipments(): void {
+    this.router.navigate(['/admin/shipments']);
+  }
+
+  goToShipmentStatusChange(): void {
+    this.router.navigate(['/admin/shipments/status']);
   }
 
   calculateStats(): void {
@@ -213,14 +328,7 @@ export class Home implements OnInit {
         const dateB = new Date(b.shippedAt);
         return dateB.getTime() - dateA.getTime();
       })
-      .slice(0, 5);
-  }
-
-  getGreeting(): string {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Buenos días';
-    if (hour < 19) return 'Buenas tardes';
-    return 'Buenas noches';
+      .slice(0, 2);
   }
 
   getStatusColor(status: string | undefined): string {
@@ -343,12 +451,30 @@ export class Home implements OnInit {
     this.router.navigate(['/login']);
   }
 
-  onRefresh(): void {
-    this.refreshing = true;
-    this.loadShipments().then(() => {
+onRefresh(): void {
+  this.refreshing = true;
+  
+  if (this.isAdmin || this.isSuperAdmin) {
+    Promise.all([
+      this.loadAllShipments(),
+      this.loadAllUsers(),
+      this.loadAllCustomers()
+    ]).then(() => {
+      this.calculateAdminStats();
+      this.refreshing = false;
+    }).catch(error => {
+      console.error('Error refreshing data:', error);
+      this.refreshing = false;
+    });
+  } else {
+    this.loadUserShipments().then(() => {
+      this.refreshing = false;
+    }).catch(error => {
+      console.error('Error refreshing shipments:', error);
       this.refreshing = false;
     });
   }
+}
 
   viewAllShipments(): void {
     this.router.navigate(['/shipments/list']);
@@ -360,12 +486,6 @@ export class Home implements OnInit {
 
   createNewShipment(): void {
     this.router.navigate(['/shipments/create']);
-  }
-
-  getShortName(): string {
-    if (!this.userData?.name) return 'Usuario';
-    const name = this.userData.name;
-    return name.split(' ')[0];
   }
   
   setFilter(filter: string): void {
