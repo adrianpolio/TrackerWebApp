@@ -1,1 +1,497 @@
-<p>users works!</p>
+<div class="users-container">
+  <div class="admin-header">
+    <div class="header-content">
+      <div class="header-left">
+        <h1 class="page-title">
+          <i class="fas fa-users mr-2"></i>
+          Gestión de Usuarios
+        </h1>
+        <p class="page-subtitle">
+          Administra todos los usuarios del sistema
+        </p>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-refresh" (click)="onRefresh()" [disabled]="loading">
+          <i class="fas fa-sync-alt" [class.fa-spin]="refreshing"></i>
+          {{ refreshing ? 'Actualizando...' : 'Actualizar' }}
+        </button>
+        <button class="btn btn-primary" (click)="openCreateModal()">
+          <i class="fas fa-plus mr-2"></i>
+          Nuevo Usuario
+        </button>
+        <button class="btn btn-secondary" routerLink="/">
+          <i class="fas fa-arrow-left mr-2"></i>
+          Volver al Inicio
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-toolbar">
+    <div class="search-container">
+      <i class="fas fa-search search-icon"></i>
+      <input type="text" class="search-input" placeholder="Buscar por nombre, email o rol..." [(ngModel)]="searchTerm"
+        (input)="filterUsers()">
+    </div>
+
+    <div class="stats-container">
+      <div class="stat-item">
+        <span class="stat-label">Total Usuarios:</span>
+        <span class="stat-value">{{ users.length }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Activos:</span>
+        <span class="stat-value">{{ activeUsersCount }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Inactivos:</span>
+        <span class="stat-value">{{ inactiveUsersCount }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Administradores:</span>
+        <span class="stat-value">{{ adminCount + superAdminCount }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="successMessage" class="alert alert-success">
+    <i class="fas fa-check-circle mr-2"></i>
+    {{ successMessage }}
+  </div>
+
+  <div *ngIf="errorMessage" class="alert alert-error">
+    <i class="fas fa-exclamation-circle mr-2"></i>
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="loading && !refreshing" class="loading-container">
+    <div class="spinner"></div>
+    <p>Cargando usuarios...</p>
+  </div>
+
+  <div *ngIf="!loading && filteredUsers.length === 0" class="empty-state">
+    <div class="empty-icon">
+      <i class="fas fa-users"></i>
+    </div>
+    <h3>No hay usuarios registrados</h3>
+    <p *ngIf="searchTerm">
+      No se encontraron usuarios con la búsqueda "{{ searchTerm }}"
+    </p>
+    <p *ngIf="!searchTerm">
+      Comienza agregando tu primer usuario
+    </p>
+    <div class="empty-actions">
+      <button class="btn btn-primary" (click)="openCreateModal()">
+        <i class="fas fa-plus mr-2"></i>
+        Crear primer usuario
+      </button>
+      <button class="btn btn-refresh" (click)="onRefresh()" [disabled]="loading">
+        <i class="fas fa-sync-alt mr-2"></i>
+        Reintentar
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="!loading && filteredUsers.length > 0" class="table-container">
+    <div class="table-header">
+      <div class="table-info">
+        <span class="table-count">
+          <i class="fas fa-users mr-1"></i>
+          {{ filteredUsers.length }} usuario{{ filteredUsers.length !== 1 ? 's' : '' }} encontrado{{
+          filteredUsers.length !== 1 ? 's' : '' }}
+        </span>
+        <span class="table-search-info" *ngIf="searchTerm">
+          <i class="fas fa-search mr-1"></i>
+          Búsqueda: "{{ searchTerm }}"
+        </span>
+      </div>
+      <div class="table-actions">
+        <button class="btn btn-refresh-sm" (click)="onRefresh()" [disabled]="loading" title="Actualizar lista">
+          <i class="fas fa-sync-alt" [class.fa-spin]="loading"></i>
+        </button>
+        <button class="btn btn-export" (click)="exportToCSV()" title="Exportar a CSV">
+          <i class="fas fa-file-export"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>
+              <button class="sort-btn" (click)="toggleSort('name')">
+                Nombre
+                <i class="fas" [class.fa-sort]="sortField !== 'name'"
+                  [class.fa-sort-up]="sortField === 'name' && sortDirection === 'asc'"
+                  [class.fa-sort-down]="sortField === 'name' && sortDirection === 'desc'"></i>
+              </button>
+            </th>
+            <th>Email</th>
+            <th>Rol</th>
+            <th>
+              <button class="sort-btn" (click)="toggleSort('isActive')">
+                Estado
+                <i class="fas" [class.fa-sort]="sortField !== 'isActive'"
+                  [class.fa-sort-up]="sortField === 'isActive' && sortDirection === 'asc'"
+                  [class.fa-sort-down]="sortField === 'isActive' && sortDirection === 'desc'"></i>
+              </button>
+            </th>
+            <th class="text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of paginatedUsers" [class.inactive-row]="!user.isActive">
+            <td>
+              <div class="customer-info">
+                <strong>{{ user.name }}</strong>
+                <small class="user-id">ID: {{ user.userId }}</small>
+              </div>
+            </td>
+            <td>
+              <div class="email-cell">
+                <i class="fas fa-envelope mr-1"></i>
+                {{ user.email }}
+              </div>
+            </td>
+            <td>
+              <span class="role-badge" [class]="'role-' + user.role.toLowerCase()">
+                {{ getRoleLabel(user.role) }}
+              </span>
+            </td>
+            <td>
+              <span class="status-badge" [class.active]="user.isActive" [class.inactive]="!user.isActive">
+                <i class="fas fa-circle status-icon"></i>
+                {{ user.isActive ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td class="actions-cell">
+              <div class="actions-buttons">
+                <button class="btn-action btn-edit" (click)="openEditModal(user)" title="Editar">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn-action" [class.btn-activate]="!user.isActive" [class.btn-deactivate]="user.isActive"
+                  (click)="toggleUserStatus(user)" [title]="user.isActive ? 'Desactivar' : 'Activar'">
+                  <i [class]="user.isActive ? 'fas fa-ban' : 'fas fa-check'"></i>
+                </button>
+                <button class="btn-action btn-delete" (click)="openDeleteModal(user)" title="Eliminar">
+                  <i class="fas fa-trash"></i>
+                </button>
+                <button class="btn-action btn-view" (click)="viewUserDetails(user)" title="Ver detalles">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="totalPages > 1" class="pagination-container">
+      <div class="pagination-info">
+        Mostrando {{ paginationRange }}
+        de {{ filteredUsers.length }} usuarios
+        <span *ngIf="searchTerm" class="search-info">
+          (Filtrado de {{ users.length }} total)
+        </span>
+      </div>
+      <div class="pagination-controls">
+        <div class="page-size-selector">
+          <label for="pageSize" class="page-size-label">
+            <i class="fas fa-list mr-1"></i>
+            Mostrar:
+          </label>
+          <select id="pageSize" class="page-size-select" [(ngModel)]="itemsPerPage" (change)="onPageSizeChange()">
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+          </select>
+        </div>
+
+        <div class="pagination-buttons">
+          <button class="pagination-btn" [disabled]="currentPage === 1" (click)="previousPage()"
+            title="Página anterior">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+
+          <div class="page-numbers">
+            <button *ngFor="let page of getPageNumbers()" class="page-number" [class.active]="currentPage === page"
+              (click)="goToPage(page)">
+              {{ page }}
+            </button>
+          </div>
+
+          <button class="pagination-btn" [disabled]="currentPage === totalPages" (click)="nextPage()"
+            title="Página siguiente">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+
+        <div class="page-jump">
+          <input type="number" class="page-jump-input" [min]="1" [max]="totalPages" [(ngModel)]="jumpPage"
+            placeholder="Ir a" (keyup.enter)="jumpToPage()">
+          <button class="page-jump-btn" (click)="jumpToPage()" title="Ir a página">
+            <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="showCreateModal" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <i class="fas fa-user-plus mr-2"></i>
+          Nuevo Usuario
+        </h3>
+        <button class="modal-close" (click)="closeModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form [formGroup]="createForm" (ngSubmit)="createUser()">
+          <div class="form-group">
+            <label for="createName" class="form-label">
+              <i class="fas fa-user mr-1"></i>
+              Nombre Completo *
+            </label>
+            <input id="createName" type="text" class="form-control" formControlName="name" placeholder="Ej: Juan Pérez"
+              [class.is-invalid]="createForm.get('name')?.invalid && createForm.get('name')?.touched">
+            <div *ngIf="createForm.get('name')?.invalid && createForm.get('name')?.touched" class="invalid-feedback">
+              <span *ngIf="createForm.get('name')?.errors?.['required']">
+                El nombre es requerido
+              </span>
+              <span *ngIf="createForm.get('name')?.errors?.['minlength']">
+                Mínimo 3 caracteres
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="createEmail" class="form-label">
+              <i class="fas fa-envelope mr-1"></i>
+              Email *
+            </label>
+            <input id="createEmail" type="email" class="form-control" formControlName="email"
+              placeholder="Ej: usuario@email.com"
+              [class.is-invalid]="createForm.get('email')?.invalid && createForm.get('email')?.touched">
+            <div *ngIf="createForm.get('email')?.invalid && createForm.get('email')?.touched" class="invalid-feedback">
+              <span *ngIf="createForm.get('email')?.errors?.['required']">
+                El email es requerido
+              </span>
+              <span *ngIf="createForm.get('email')?.errors?.['email']">
+                Email inválido
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="createPassword" class="form-label">
+              <i class="fas fa-lock mr-1"></i>
+              Contraseña *
+            </label>
+            <input id="createPassword" type="password" class="form-control" formControlName="password"
+              placeholder="Mínimo 6 caracteres"
+              [class.is-invalid]="createForm.get('password')?.invalid && createForm.get('password')?.touched">
+            <div *ngIf="createForm.get('password')?.invalid && createForm.get('password')?.touched"
+              class="invalid-feedback">
+              <span *ngIf="createForm.get('password')?.errors?.['required']">
+                La contraseña es requerida
+              </span>
+              <span *ngIf="createForm.get('password')?.errors?.['minlength']">
+                Mínimo 6 caracteres
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="createRole" class="form-label">
+              <i class="fas fa-user-tag mr-1"></i>
+              Rol *
+            </label>
+            <select id="createRole" class="form-control" formControlName="role"
+              [class.is-invalid]="createForm.get('role')?.invalid && createForm.get('role')?.touched">
+              <option value="User">Usuario</option>
+              <option value="Admin">Administrador</option>
+              <option value="SuperAdmin" *ngIf="isSuperAdmin">Super Admin</option>
+            </select>
+            <div *ngIf="createForm.get('role')?.invalid && createForm.get('role')?.touched" class="invalid-feedback">
+              <span *ngIf="createForm.get('role')?.errors?.['required']">
+                El rol es requerido
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" id="createIsActive" formControlName="isActive">
+              <label class="form-check-label" for="createIsActive">
+                <i class="fas fa-toggle-on mr-1"></i>
+                Usuario activo
+              </label>
+            </div>
+            <small class="text-muted">Los usuarios inactivos no pueden iniciar sesión</small>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeModal()">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary" [disabled]="createForm.invalid || loading">
+              <i class="fas fa-save mr-2"></i>
+              {{ loading ? 'Guardando...' : 'Guardar Usuario' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="showEditModal" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <i class="fas fa-edit mr-2"></i>
+          Editar Usuario
+        </h3>
+        <button class="modal-close" (click)="closeModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form [formGroup]="editForm" (ngSubmit)="updateUser()">
+          <div class="form-group">
+            <label class="form-label">
+              <i class="fas fa-user mr-1"></i>
+              Nombre Completo *
+            </label>
+            <input type="text" class="form-control" formControlName="name"
+              [class.is-invalid]="editForm.get('name')?.invalid && editForm.get('name')?.touched">
+            <div *ngIf="editForm.get('name')?.invalid && editForm.get('name')?.touched" class="invalid-feedback">
+              <span *ngIf="editForm.get('name')?.errors?.['required']">
+                El nombre es requerido
+              </span>
+              <span *ngIf="editForm.get('name')?.errors?.['minlength']">
+                Mínimo 3 caracteres
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <i class="fas fa-envelope mr-1"></i>
+              Email *
+            </label>
+            <input type="email" class="form-control" formControlName="email"
+              [class.is-invalid]="editForm.get('email')?.invalid && editForm.get('email')?.touched">
+            <div *ngIf="editForm.get('email')?.invalid && editForm.get('email')?.touched" class="invalid-feedback">
+              <span *ngIf="editForm.get('email')?.errors?.['required']">
+                El email es requerido
+              </span>
+              <span *ngIf="editForm.get('email')?.errors?.['email']">
+                Email inválido
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <i class="fas fa-user-tag mr-1"></i>
+              Rol *
+            </label>
+            <select class="form-control" formControlName="role"
+              [class.is-invalid]="editForm.get('role')?.invalid && editForm.get('role')?.touched">
+              <option value="User">Usuario</option>
+              <option value="Admin">Administrador</option>
+              <option value="SuperAdmin" *ngIf="isSuperAdmin">Super Admin</option>
+            </select>
+            <div *ngIf="editForm.get('role')?.invalid && editForm.get('role')?.touched" class="invalid-feedback">
+              <span *ngIf="editForm.get('role')?.errors?.['required']">
+                El rol es requerido
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" id="editIsActive" formControlName="isActive">
+              <label class="form-check-label" for="editIsActive">
+                <i class="fas fa-toggle-on mr-1"></i>
+                Usuario activo
+              </label>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeModal()">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary" [disabled]="editForm.invalid || loading">
+              <i class="fas fa-save mr-2"></i>
+              {{ loading ? 'Actualizando...' : 'Actualizar Usuario' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="showDeleteModal" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title text-danger">
+          <i class="fas fa-exclamation-triangle mr-2"></i>
+          Confirmar Eliminación
+        </h3>
+        <button class="modal-close" (click)="closeModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="delete-warning">
+          <div class="warning-icon">
+            <i class="fas fa-trash-alt"></i>
+          </div>
+          <h4>¿Estás seguro de eliminar este usuario?</h4>
+          <p class="text-muted">
+            Esta acción no se puede deshacer. Se eliminará permanentemente el usuario:
+          </p>
+          <div class="delete-info" *ngIf="selectedUser">
+            <div class="info-item">
+              <strong>Nombre:</strong> {{ selectedUser.name }}
+            </div>
+            <div class="info-item">
+              <strong>Email:</strong> {{ selectedUser.email }}
+            </div>
+            <div class="info-item">
+              <strong>Rol:</strong> {{ getRoleLabel(selectedUser.role) }}
+            </div>
+            <div class="info-item">
+              <strong>Estado:</strong> {{ selectedUser.isActive ? 'Activo' : 'Inactivo' }}
+            </div>
+          </div>
+          <div class="alert alert-warning"
+            *ngIf="selectedUser && (selectedUser.role === 'Admin' || selectedUser.role === 'SuperAdmin')">
+            <i class="fas fa-exclamation-triangle mr-2"></i>
+            ¡Advertencia! Este usuario tiene privilegios de administración.
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeModal()">
+            Cancelar
+          </button>
+          <button type="button" class="btn btn-danger" (click)="deleteUser()" [disabled]="loading">
+            <i class="fas fa-trash mr-2"></i>
+            {{ loading ? 'Eliminando...' : 'Eliminar Permanentemente' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

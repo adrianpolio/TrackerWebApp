@@ -8,6 +8,7 @@ import { ShipmentsDetail } from './components/shipments/shipments-detail/shipmen
 import { ShipmentsEdit } from './components/shipments/shipments-edit/shipments-edit';
 import { TrackComponent } from './components/track/track';
 import { CustomersComponent } from './components/admin.1/customers/customers';
+import { UsersComponent } from './components/admin.1/users/users';
 
 export const routes: Routes = [
     { path: '', component: Home }, 
@@ -19,5 +20,6 @@ export const routes: Routes = [
     { path: 'shipments/detail/:id', component: ShipmentsDetail},
     { path: 'shipments/edit/:id', component: ShipmentsEdit},
     { path: 'track', component: TrackComponent }, 
-    { path: 'admin/customers', component: CustomersComponent}
+    { path: 'admin/customers', component: CustomersComponent},
+    { path: 'admin/users', component: UsersComponent}
 ];
