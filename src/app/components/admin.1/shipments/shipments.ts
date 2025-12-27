@@ -203,7 +203,7 @@ export class ShipmentsComponent implements OnInit {
       s.shipmentStatusDescription === 'Entregado' || s.shipmentStatus === 'Entregado'
     ).length;
     this.cancelledCount = this.shipments.filter(s =>
-      s.shipmentStatusDescription === 'Cancelado' || s.shipmentStatus === 'Cancelado'
+      s.shipmentStatusDescription === 'Devuelto' || s.shipmentStatus === 'Devuelto'
     ).length;
   }
 
