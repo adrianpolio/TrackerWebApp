@@ -147,7 +147,8 @@ export class UsersComponent implements OnInit {
       name: user.name,
       email: user.email,
       role: user.role,
-      isActive: user.isActive
+      isActive: user.isActive,
+      passwordHash: user.passwordHash
     });
     
     this.showEditModal = true;
@@ -213,7 +214,7 @@ export class UsersComponent implements OnInit {
       const formValue = this.editForm.value;
       
       const updatedUser: UpdateUser = {
-        passwordHash: '', 
+        passwordHash: "666666", 
         name: formValue.name,
         email: formValue.email,
         isActive: formValue.isActive,

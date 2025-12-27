@@ -167,13 +167,19 @@
             </td>
             <td class="actions-cell">
               <div class="actions-buttons">
+                <button class="btn-action btn-edit" (click)="openEditModal(user)" title="Editar">
+                  <i class="fas fa-edit"></i>
+                </button>
+                
                 <button class="btn-action" [class.btn-activate]="!user.isActive" [class.btn-deactivate]="user.isActive"
                   (click)="toggleUserStatus(user)" [title]="user.isActive ? 'Desactivar' : 'Activar'">
                   <i [class]="user.isActive ? 'fas fa-ban' : 'fas fa-check'"></i>
                 </button>
+
                 <button class="btn-action btn-delete" (click)="openDeleteModal(user)" title="Eliminar">
                   <i class="fas fa-trash"></i>
                 </button>
+
                 <button class="btn-action btn-view" (click)="viewUserDetails(user)" title="Ver detalles">
                   <i class="fas fa-eye"></i>
                 </button>
