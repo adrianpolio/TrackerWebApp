@@ -1,0 +1,592 @@
+<div class="shipments-container">
+    <div class="admin-header">
+        <div class="header-content">
+            <div class="header-left">
+                <h1 class="page-title">
+                    <i class="fas fa-shipping-fast mr-2"></i>
+                    Gestión de Envíos
+                </h1>
+                <p class="page-subtitle">
+                    Administra todos los envíos del sistema
+                </p>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-refresh" (click)="onRefresh()" [disabled]="loading">
+                    <i class="fas fa-sync-alt" [class.fa-spin]="refreshing"></i>
+                    {{ refreshing ? 'Actualizando...' : 'Actualizar' }}
+                </button>
+                <button class="btn btn-primary" (click)="openCreateModal()">
+                    <i class="fas fa-plus mr-2"></i>
+                    Nuevo Envío
+                </button>
+                <button class="btn btn-secondary" routerLink="/">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Volver
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-toolbar">
+        <div class="search-container">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" class="search-input" placeholder="Buscar por número, descripción o destino..."
+                [(ngModel)]="searchTerm" (input)="filterShipments()">
+        </div>
+
+        <div class="filters-container">
+            <select class="filter-select" [(ngModel)]="statusFilter" (change)="filterShipments()">
+                <option value="ALL">Todos los estados</option>
+                <option value="Habilitado">Habilitado</option>
+                <option value="Empaquetado">Empaquetado</option>
+                <option value="En Tránsito">En Tránsito</option>
+                <option value="LlegadaDestino">Llegada a Destino</option>
+                <option value="Entregado">Entregado</option>
+                <option value="Devuelto">Devuelto</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-box"></i>
+            </div>
+            <div class="stat-content">
+                <h3 class="stat-title">Total Envíos</h3>
+                <p class="stat-value">{{ totalShipments }}</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon status-active">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-content">
+                <h3 class="stat-title">Habilitados</h3>
+                <p class="stat-value">{{ activeCount }}</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon status-delivered">
+                <i class="fas fa-truck-loading"></i>
+            </div>
+            <div class="stat-content">
+                <h3 class="stat-title">Entregados</h3>
+                <p class="stat-value">{{ deliveredCount }}</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon status-cancelled">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <div class="stat-content">
+                <h3 class="stat-title">Cancelados</h3>
+                <p class="stat-value">{{ cancelledCount }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="successMessage" class="alert alert-success">
+        <i class="fas fa-check-circle mr-2"></i>
+        {{ successMessage }}
+    </div>
+
+    <div *ngIf="errorMessage" class="alert alert-error">
+        <i class="fas fa-exclamation-circle mr-2"></i>
+        {{ errorMessage }}
+    </div>
+
+    <div *ngIf="loading && !refreshing" class="loading-container">
+        <div class="spinner"></div>
+        <p>Cargando envíos...</p>
+    </div>
+
+    <div *ngIf="!loading && filteredShipments.length === 0" class="empty-state">
+        <div class="empty-icon">
+            <i class="fas fa-box-open"></i>
+        </div>
+        <h3>No hay envíos registrados</h3>
+        <p *ngIf="searchTerm || statusFilter !== 'ALL'">
+            No se encontraron envíos con los filtros aplicados
+        </p>
+        <p *ngIf="!searchTerm && statusFilter === 'ALL'">
+            Comienza agregando tu primer envío
+        </p>
+        <div class="empty-actions">
+            <button class="btn btn-primary" (click)="openCreateModal()">
+                <i class="fas fa-plus mr-2"></i>
+                Crear primer envío
+            </button>
+            <button class="btn btn-refresh" (click)="onRefresh()" [disabled]="loading">
+                <i class="fas fa-sync-alt mr-2"></i>
+                Reintentar
+            </button>
+        </div>
+    </div>
+
+    <div *ngIf="!loading && filteredShipments.length > 0" class="table-container">
+        <div class="table-header">
+            <div class="table-info">
+                <span class="table-count">
+                    <i class="fas fa-box mr-1"></i>
+                    {{ filteredShipments.length }} envío{{ filteredShipments.length !== 1 ? 's' : '' }} encontrado{{
+                    filteredShipments.length !== 1 ? 's' : '' }}
+                </span>
+            </div>
+            <div class="table-actions">
+                <button class="btn btn-export" (click)="exportToCSV()" title="Exportar a CSV">
+                    <i class="fas fa-file-export mr-1"></i>
+                    Exportar
+                </button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>
+                            <button class="sort-btn" (click)="toggleSort('trackingNumber')">
+                                N° Seguimiento
+                                <i class="fas" [class.fa-sort]="sortField !== 'trackingNumber'"
+                                    [class.fa-sort-up]="sortField === 'trackingNumber' && sortDirection === 'asc'"
+                                    [class.fa-sort-down]="sortField === 'trackingNumber' && sortDirection === 'desc'"></i>
+                            </button>
+                        </th>
+                        <th>Descripción</th>
+                        <th>Destino</th>
+                        <th>Estado</th>
+                        <th>Cliente</th>
+                        <th>Usuario</th>
+                        <th>Fecha Envío</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let shipment of paginatedShipments">
+                        <td>
+                            <div class="tracking-info">
+                                <strong>{{ shipment.trackingNumber }}</strong>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="description-cell" [title]="shipment.description">
+                                {{ shipment.description.length > 30 ? shipment.description.substring(0, 30) + '...' :
+                                shipment.description }}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="destination-cell" [title]="shipment.destination">
+                                {{ shipment.destination.length > 25 ? shipment.destination.substring(0, 25) + '...' :
+                                shipment.destination }}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge"
+                                [class]="getStatusClass(shipment.shipmentStatusDescription || shipment.shipmentStatus)">
+                                {{ getStatusLabel(shipment.shipmentStatusDescription || shipment.shipmentStatus) }}
+                            </span>
+                        </td>
+                        <td>{{ shipment.customerName }}</td>
+                        <td>{{ shipment.userName }}</td>
+                        <td>
+                            <div class="date-cell">
+                                <i class="fas fa-calendar-alt mr-1"></i>
+                                {{ formatDateTime(shipment.shippedAt) }}
+                            </div>
+                        </td>
+                        <td class="actions-cell">
+                            <div class="actions-buttons">
+                                <button class="btn-action btn-view" (click)="openDetailsModal(shipment)"
+                                    title="Ver detalles">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn-action btn-edit" (click)="openEditModal(shipment)" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-action btn-status" (click)="openStatusModal(shipment)"
+                                    title="Cambiar estado">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </button>
+                                <button class="btn-action btn-print" (click)="printShippingLabel(shipment)"
+                                    title="Imprimir etiqueta">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                                <button class="btn-action btn-delete" (click)="openDeleteModal(shipment)"
+                                    title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div *ngIf="totalPages > 1" class="pagination-container">
+            <div class="pagination-info">
+                Mostrando {{ paginationRange }}
+                de {{ filteredShipments.length }} envíos
+                <span *ngIf="searchTerm" class="search-info">
+                    (Filtrado de {{ shipments.length }} total)
+                </span>
+            </div>
+            <div class="pagination-controls">
+                <div class="page-size-selector">
+                    <label for="pageSize" class="page-size-label">
+                        <i class="fas fa-list mr-1"></i>
+                        Mostrar:
+                    </label>
+                    <select id="pageSize" class="page-size-select" [(ngModel)]="itemsPerPage"
+                        (change)="onPageSizeChange()">
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+
+                <div class="pagination-buttons">
+                    <button class="pagination-btn" [disabled]="currentPage === 1" (click)="previousPage()"
+                        title="Página anterior">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+
+                    <div class="page-numbers">
+                        <button *ngFor="let page of getPageNumbers()" class="page-number"
+                            [class.active]="currentPage === page" (click)="goToPage(page)">
+                            {{ page }}
+                        </button>
+                    </div>
+
+                    <button class="pagination-btn" [disabled]="currentPage === totalPages" (click)="nextPage()"
+                        title="Página siguiente">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <div class="page-jump">
+                    <input type="number" class="page-jump-input" [min]="1" [max]="totalPages" [(ngModel)]="jumpPage"
+                        placeholder="Ir a" (keyup.enter)="jumpToPage()">
+                    <button class="page-jump-btn" (click)="jumpToPage()" title="Ir a página">
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="showCreateModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-plus mr-2"></i>
+                    Nuevo Envío
+                </h3>
+                <button class="modal-close" (click)="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <form [formGroup]="createForm" (ngSubmit)="createShipment()">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-hashtag mr-1"></i>
+                                Número de Seguimiento
+                            </label>
+                            <input type="text" class="form-control" formControlName="trackingNumber" readonly>
+                            <small class="text-muted">Generado automáticamente</small>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-user mr-1"></i>
+                                Cliente
+                            </label>
+                            <select class="form-control" formControlName="customerId">
+                                <option *ngIf="customers.length === 0" value="" disabled selected>
+                                    No hay clientes disponibles
+                                </option>
+                                <option *ngFor="let customer of customers" [value]="customer.customerId">
+                                    {{ customer.name }}
+                                </option>
+                            </select>
+                            <small *ngIf="customers.length === 0" class="text-danger">
+                                <i class="fas fa-exclamation-triangle mr-1"></i>
+                                Debe crear clientes primero en la sección de Gestión de Clientes
+                            </small>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-user-tie mr-1"></i>
+                                Usuario
+                            </label>
+                            <select class="form-control" formControlName="userId">
+                                <option *ngFor="let user of users" [value]="user.userId">
+                                    {{ user.name }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-file-alt mr-1"></i>
+                            Descripción
+                        </label>
+                        <textarea class="form-control" formControlName="description" rows="3"
+                            placeholder="Descripción del paquete..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-map-marker-alt mr-1"></i>
+                            Destino
+                        </label>
+                        <input type="text" class="form-control" formControlName="destination"
+                            placeholder="Dirección completa de destino">
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" (click)="closeModal()">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary" [disabled]="createForm.invalid || loading">
+                            <i class="fas fa-save mr-2"></i>
+                            {{ loading ? 'Guardando...' : 'Guardar Envío' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="showEditModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-edit mr-2"></i>
+                    Editar Envío
+                </h3>
+                <button class="modal-close" (click)="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <form [formGroup]="editForm" (ngSubmit)="updateShipment()">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-hashtag mr-1"></i>
+                            Número de Seguimiento
+                        </label>
+                        <input type="text" class="form-control" formControlName="trackingNumber">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-file-alt mr-1"></i>
+                            Descripción
+                        </label>
+                        <textarea class="form-control" formControlName="description" rows="3"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-map-marker-alt mr-1"></i>
+                            Destino
+                        </label>
+                        <input type="text" class="form-control" formControlName="destination">
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" (click)="closeModal()">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary" [disabled]="editForm.invalid || loading">
+                            <i class="fas fa-save mr-2"></i>
+                            {{ loading ? 'Actualizando...' : 'Actualizar Envío' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="showDetailsModal && selectedShipment" class="modal-overlay">
+        <div class="modal-container modal-lg">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Detalles del Envío
+                </h3>
+                <button class="modal-close" (click)="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <div class="details-grid">
+                    <div class="detail-item">
+                        <strong>Número de Seguimiento:</strong>
+                        <span>{{ selectedShipment.trackingNumber }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <strong>Descripción:</strong>
+                        <span>{{ selectedShipment.description }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <strong>Destino:</strong>
+                        <span>{{ selectedShipment.destination }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <strong>Estado:</strong>
+                        <span class="status-badge"
+                            [class]="getStatusClass(selectedShipment.shipmentStatusDescription || selectedShipment.shipmentStatus)">
+                            {{ getStatusLabel(selectedShipment.shipmentStatusDescription ||
+                            selectedShipment.shipmentStatus) }}
+                        </span>
+                    </div>
+                    <div class="detail-item">
+                        <strong>Cliente:</strong>
+                        <span>{{ selectedShipment.customerName }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <strong>Usuario:</strong>
+                        <span>{{ selectedShipment.userName }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <strong>Fecha de Envío:</strong>
+                        <span>{{ formatDateTime(selectedShipment.shippedAt) }}</span>
+                    </div>
+                    <div class="detail-item" *ngIf="selectedShipment.receivedAt">
+                        <strong>Fecha de Recepción:</strong>
+                        <span>{{ formatDateTime(selectedShipment.receivedAt) }}</span>
+                    </div>
+                    <div class="detail-item" *ngIf="selectedShipment.receivedBy">
+                        <strong>Recibido por:</strong>
+                        <span>{{ selectedShipment.receivedBy }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" (click)="closeModal()">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="showStatusModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-exchange-alt mr-2"></i>
+                    Cambiar Estado del Envío
+                </h3>
+                <button class="modal-close" (click)="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <form [formGroup]="statusForm" (ngSubmit)="updateShipmentStatus()">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-flag mr-1"></i>
+                            Estado
+                        </label>
+                        <select class="form-control" formControlName="shipmentStatus">
+                            <option *ngFor="let status of shipmentStatuses" [value]="status.value">
+                                {{ status.label }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" *ngIf="statusForm.get('shipmentStatus')?.value === 'Entregado'">
+                        <label class="form-label">
+                            <i class="fas fa-user-check mr-1"></i>
+                            Recibido por
+                        </label>
+                        <input type="text" class="form-control" formControlName="receivedBy"
+                            placeholder="Nombre de quien recibe">
+                    </div>
+
+                    <div class="form-group" *ngIf="statusForm.get('shipmentStatus')?.value === 'Entregado'">
+                        <label class="form-label">
+                            <i class="fas fa-calendar-check mr-1"></i>
+                            Fecha de Recepción
+                        </label>
+                        <input type="datetime-local" class="form-control" formControlName="receivedAt">
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" (click)="closeModal()">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary" [disabled]="statusForm.invalid || loading">
+                            <i class="fas fa-save mr-2"></i>
+                            {{ loading ? 'Actualizando...' : 'Actualizar Estado' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="showDeleteModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title text-danger">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    Confirmar Eliminación
+                </h3>
+                <button class="modal-close" (click)="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <div class="delete-warning">
+                    <div class="warning-icon">
+                        <i class="fas fa-trash-alt"></i>
+                    </div>
+                    <h4>¿Estás seguro de eliminar este envío?</h4>
+                    <p class="text-muted">
+                        Esta acción no se puede deshacer. Se eliminará permanentemente el envío:
+                    </p>
+                    <div class="delete-info" *ngIf="selectedShipment">
+                        <div class="info-item">
+                            <strong>N° Seguimiento:</strong> {{ selectedShipment.trackingNumber }}
+                        </div>
+                        <div class="info-item">
+                            <strong>Descripción:</strong> {{ selectedShipment.description }}
+                        </div>
+                        <div class="info-item">
+                            <strong>Destino:</strong> {{ selectedShipment.destination }}
+                        </div>
+                        <div class="info-item">
+                            <strong>Cliente:</strong> {{ selectedShipment.customerName }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" (click)="closeModal()">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn btn-danger" (click)="deleteShipment()" [disabled]="loading">
+                        <i class="fas fa-trash mr-2"></i>
+                        {{ loading ? 'Eliminando...' : 'Eliminar Permanentemente' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

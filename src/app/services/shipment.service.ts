@@ -16,8 +16,8 @@ export class ShipmentService {
 			map(data => data.map(item => ({
 				...item,
 				shipmentStatus: item.shipmentStatusDescription,
-				customerId: item.customerId || 0, 
-				userId: item.userId || 0 
+				customerId: item.customerId || 0,
+				userId: item.userId || 0
 			})))
 		);
 	}
@@ -38,7 +38,7 @@ export class ShipmentService {
 		return this.http.delete<{ message: string }>(`${this.apiUrl}/${shipmentId}`);
 	}
 
-	updateShipmentStatus(shipmentId: number, status: UpdateShipmentStatus): Observable<Shipment> {
-		return this.http.put<Shipment>(`${this.apiUrl}/${shipmentId}/status`, status);
+	updateShipmentStatus(shipmentId: number,data: UpdateShipmentStatus) {
+		return this.http.patch(`${this.apiUrl}/${shipmentId}/status`,data);
 	}
 }

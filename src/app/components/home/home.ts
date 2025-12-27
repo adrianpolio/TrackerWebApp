@@ -221,10 +221,6 @@ getShortName(): string {
     this.router.navigate(['/admin/shipments']);
   }
 
-  goToShipmentStatusChange(): void {
-    this.router.navigate(['/admin/shipments/status']);
-  }
-
   calculateStats(): void {
     if (!this.shipments || this.shipments.length === 0) {
       this.stats = {
