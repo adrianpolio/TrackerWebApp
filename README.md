@@ -2,6 +2,24 @@
 
 Frontend hecho en Angular conectado a .Net backend: https://github.com/victormanuelblas/cbtc-proyect-tracker-back
 
+<img width="1846" height="1026" alt="Image" src="https://github.com/user-attachments/assets/1cc161c8-28a3-48b0-b385-6373c76759f9" />
+<img width="1846" height="1026" alt="Image" src="https://github.com/user-attachments/assets/85211fb8-de92-4ba1-867d-dc4ad2887123" />
+<img width="1846" height="1026" alt="Image" src="https://github.com/user-attachments/assets/5737bd6e-0a41-4c5f-8895-794d7ef6e88a" />
+
+---
+
+#### Extra )
+
+Para logearse:
+- Email: 
+- Password: password
+```
+1	Admin User	admin@tracker.com	$2a$10$U1Et/gitorJ8ogzMkWQl6OoMrqrjUR.iAPG5eRBtZFNBDRSA1XJYq	3	1
+2	Juan Pérez	juan.perez@tracker.com	$2a$10$U1Et/gitorJ8ogzMkWQl6OoMrqrjUR.iAPG5eRBtZFNBDRSA1XJYq	2	1
+3	María González	maria.gonzalez@tracker.com	$2a$10$U1Et/gitorJ8ogzMkWQl6OoMrqrjUR.iAPG5eRBtZFNBDRSA1XJYq	1	1
+4	Carlos Ramírez	carlos.ramirez@tracker.com	$2a$10$U1Et/gitorJ8ogzMkWQl6OoMrqrjUR.iAPG5eRBtZFNBDRSA1XJYq	1	1
+```
+
 ---
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.0.3.
@@ -12,6 +30,11 @@ To start a local development server, run:
 
 ```bash
 ng serve
+```
+
+Alt:
+```
+npx ng serve
 ```
 
 Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
