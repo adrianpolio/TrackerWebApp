@@ -417,12 +417,15 @@ openCreateModal(): void {
   }
 
   async updateShipmentStatus(): Promise<void> {
+  console.log('selected sht →', this.selectedShipment?.shipmentId);
 	if (!this.selectedShipment || this.statusForm.invalid) return;
 
 	const payload: UpdateShipmentStatus = {
     shipmentId: this.selectedShipment.shipmentId,
 		shipmentStatus: this.statusForm.value.shipmentStatus
 	};
+
+  console.log('UpdateShipmentStatus payload →', payload);
 
 	try {
 		await this.shipmentService
