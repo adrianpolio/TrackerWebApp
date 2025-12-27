@@ -58,7 +58,8 @@ export class CustomersComponent implements OnInit {
       name: ['', [Validators.required, Validators.minLength(3)]],
       docmNumber: ['', [Validators.required, Validators.pattern('^[0-9]{8,12}$')]],
       email: ['', [Validators.required, Validators.email]],
-      phone: ['', [Validators.required, Validators.pattern('^[0-9]{9,15}$')]],
+      //phone: ['', [Validators.required, Validators.pattern('^[0-9]{9,15}$')]],
+      phone: ['', [Validators.required, Validators.minLength(9)]],
       customerTypeId: [1, [Validators.required, Validators.min(1)]]
     });
 
@@ -66,7 +67,8 @@ export class CustomersComponent implements OnInit {
       name: ['', [Validators.required, Validators.minLength(3)]],
       docmNumber: ['', [Validators.required, Validators.pattern('^[0-9]{8,12}$')]],
       email: ['', [Validators.required, Validators.email]],
-      phone: ['', [Validators.required, Validators.pattern('^[0-9]{9,15}$')]],
+      //phone: ['', [Validators.required, Validators.pattern('^[0-9]{9,15}$')]],
+      phone: ['', [Validators.required, Validators.minLength(9)]],
       customerTypeId: [1, [Validators.required, Validators.min(1)]]
     });
   }
