@@ -503,7 +503,7 @@
                             Estado
                         </label>
                         <select class="form-control" formControlName="shipmentStatus">
-                            <option *ngFor="let status of shipmentStatuses" [value]="status.value">
+                            <option *ngFor="let status of shipmentStatuses" [ngValue]="status.value">
                                 {{ status.label }}
                             </option>
                         </select>

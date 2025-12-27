@@ -6,7 +6,7 @@ import { ShipmentService } from '../../../services/shipment.service';
 import { AuthService } from '../../../services/auth.service';
 import { UserService } from '../../../services/user.service';
 import { CustomerService } from '../../../services/customer.service';
-import { Shipment, CreateShipment, UpdateShipment } from '../../../models/shipment.model';
+import { Shipment, CreateShipment, UpdateShipment, UpdateShipmentStatus } from '../../../models/shipment.model';
 import { User } from '../../../models/user.model';
 import { Customer } from '../../../models/customer.model';
 
@@ -35,12 +35,12 @@ export class ShipmentsComponent implements OnInit {
   currentUser: User | null = null;
 
   shipmentStatuses = [
-    { value: 'Habilitado', label: 'Habilitado' },
-    { value: 'Empaquetado', label: 'Empaquetado' },
-    { value: 'En Tránsito', label: 'En Tránsito' },
-    { value: 'LlegadaDestino', label: 'Llegada a Destino' },
-    { value: 'Entregado', label: 'Entregado' },
-    { value: 'Devuelto', label: 'Devuelto' }
+    { value: 1, label: 'Habilitado' },
+    { value: 2, label: 'Empaquetado' },
+    { value: 3, label: 'En Tránsito' },
+    { value: 4, label: 'Llegada a Destino' },
+    { value: 5, label: 'Entregado' },
+    { value: 6, label: 'Devuelto' }
   ];
 
   createForm: FormGroup;
@@ -89,9 +89,9 @@ export class ShipmentsComponent implements OnInit {
     });
 
     this.statusForm = this.fb.group({
-      shipmentStatus: ['', [Validators.required]],
+      shipmentStatus: [null, [Validators.required]],
       receivedBy: [''],
-      receivedAt: ['']
+      receivedAt: [null]
     });
   }
 
@@ -142,7 +142,7 @@ export class ShipmentsComponent implements OnInit {
   async loadCustomers(): Promise<void> {
   try {
     this.customers = await this.customerService.getAllCustomers().toPromise() || [];
-    
+
     if (this.customers.length === 0) {
       console.warn('No hay clientes en la base de datos, usando datos de ejemplo');
       this.customers = [
@@ -166,9 +166,9 @@ export class ShipmentsComponent implements OnInit {
         }
       ];
     }
-    
+
     console.log('Clientes cargados:', this.customers);
-    
+
   } catch (error: any) {
     console.error('Error loading customers:', error);
     this.customers = [
@@ -269,7 +269,7 @@ export class ShipmentsComponent implements OnInit {
 openCreateModal(): void {
   const trackingNumber = 'TRK-' + Math.floor(1000 + Math.random() * 9000);
   const defaultCustomer = this.customers.length > 0 ? this.customers[0].customerId : null;
-  const defaultUser = this.currentUser?.userId || 
+  const defaultUser = this.currentUser?.userId ||
                      (this.users.length > 0 ? this.users[0].userId : null);
 
   if (!defaultCustomer) {
@@ -416,9 +416,37 @@ openCreateModal(): void {
     }
   }
 
-  async updateShipmentStatus(){
-  // Codigo Para cambiar de estado del envio
-  }
+  async updateShipmentStatus(): Promise<void> {
+	if (!this.selectedShipment || this.statusForm.invalid) return;
+
+	const payload: UpdateShipmentStatus = {
+    shipmentId: this.selectedShipment.shipmentId,
+		shipmentStatus: this.statusForm.value.shipmentStatus
+	};
+
+	try {
+		await this.shipmentService
+			.updateShipmentStatus(this.selectedShipment.shipmentId, payload)
+			.toPromise();
+
+		this.successMessage = 'Estado del envío actualizado correctamente';
+		this.showStatusModal = false;
+		this.selectedShipment = null;
+		this.statusForm.reset();
+
+		setTimeout(() => {
+			this.loadShipments();
+			this.successMessage = '';
+		}, 1500);
+
+	} catch (error: any) {
+		console.error('Error updating shipment status:', error);
+		this.errorMessage =
+			error.error?.message || 'Error al actualizar el estado del envío';
+	}
+}
+
+
 
   async deleteShipment(): Promise<void> {
     if (!this.selectedShipment) return;
