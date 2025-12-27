@@ -38,7 +38,7 @@ export class ShipmentService {
 		return this.http.delete<{ message: string }>(`${this.apiUrl}/${shipmentId}`);
 	}
 
-	updateShipmentStatus(shipmentId: number,data: UpdateShipmentStatus) {
-		return this.http.patch(`${this.apiUrl}/${shipmentId}/status`,data);
+	updateShipmentStatus(shipmentId: number, data: UpdateShipmentStatus): Observable<Shipment> {
+		return this.http.patch<Shipment>(`${this.apiUrl}/${shipmentId}/status`, data);
 	}
 }
