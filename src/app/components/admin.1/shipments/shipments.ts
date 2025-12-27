@@ -415,39 +415,49 @@ openCreateModal(): void {
       this.errorMessage = error.error?.message || 'Error al actualizar el envío';
     }
   }
+  
+
 
   async updateShipmentStatus(): Promise<void> {
-  console.log('selected sht →', this.selectedShipment?.shipmentId);
-	if (!this.selectedShipment || this.statusForm.invalid) return;
+    console.log('selected sht →', this.selectedShipment?.shipmentId);
+    if (!this.selectedShipment || this.statusForm.invalid) return;
 
-	const payload: UpdateShipmentStatus = {
-    shipmentId: this.selectedShipment.shipmentId,
-		shipmentStatus: this.statusForm.value.shipmentStatus
-	};
+    const payload: UpdateShipmentStatus = {
+      shipmentId: this.selectedShipment.shipmentId,
+      shipmentStatus: this.statusForm.value.shipmentStatus
+    };
 
-  console.log('UpdateShipmentStatus payload →', payload);
+    console.log('UpdateShipmentStatus payload →', payload);
 
-	try {
-		await this.shipmentService
-			.updateShipmentStatus(this.selectedShipment.shipmentId, payload)
-			.toPromise();
+    try {
+      await this.shipmentService
+        .updateShipmentStatus(this.selectedShipment.shipmentId, payload)
+        .toPromise();
 
-		this.successMessage = 'Estado del envío actualizado correctamente';
-		this.showStatusModal = false;
-		this.selectedShipment = null;
-		this.statusForm.reset();
 
-		setTimeout(() => {
-			this.loadShipments();
-			this.successMessage = '';
-		}, 1500);
+        this.shipments = this.shipments.map(s =>
+          s.shipmentId === payload.shipmentId
+            ? { ...s, shipmentStatus: payload.shipmentStatus }
+            : s
+        );
 
-	} catch (error: any) {
-		console.error('Error updating shipment status:', error);
-		this.errorMessage =
-			error.error?.message || 'Error al actualizar el estado del envío';
-	}
-}
+
+      this.successMessage = 'Estado del envío actualizado correctamente';
+      this.showStatusModal = false;
+      this.selectedShipment = null;
+      this.statusForm.reset();
+
+      setTimeout(() => {
+        this.loadShipments();
+        this.successMessage = '';
+      }, 1500);
+
+    } catch (error: any) {
+      console.error('Error updating shipment status:', error);
+      this.errorMessage =
+        error.error?.message || 'Error al actualizar el estado del envío';
+    }
+  }
 
 
 
